@@ -113,8 +113,3 @@ lib/
 
 > **Tips Eksplorasi Cepat**: Tekan tombol **"Demo"** pada halaman Login atau Onboarding untuk langsung memuat 2 kendaraan contoh beserta 6 bulan riwayat BBM, servis, dan dokumen pajak.
 
----
-
-## Kontributor
-
-Dirancang & dikembangkan oleh **Abdan Syakuro** ([@sukr02k](https://github.com/sukr02k)).
