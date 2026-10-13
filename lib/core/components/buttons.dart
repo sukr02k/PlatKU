@@ -6,14 +6,15 @@ class Button extends StatelessWidget {
   final VoidCallback onPressed;
   final String label;
   final Widget? icon;
-  final Color backgroundColor;
-  final Color textColor;
+  final Color? backgroundColor;
+  final Color? textColor;
   final Color? borderColor;
   final double width;
   final double height;
   final double borderRadius;
   final double fontSize;
   final bool disabled;
+  final _ButtonVariant _variant;
 
   const Button.filled({
     super.key,
@@ -28,29 +29,29 @@ class Button extends StatelessWidget {
     this.borderRadius = 14,
     this.fontSize = 14,
     this.disabled = false,
-  });
+  }) : _variant = _ButtonVariant.filled;
 
   const Button.ghost({
     super.key,
     required this.onPressed,
     required this.label,
     this.icon,
-    this.backgroundColor = AppColors.surface,
-    this.textColor = AppColors.text,
-    this.borderColor = AppColors.border,
+    this.backgroundColor,
+    this.textColor,
+    this.borderColor,
     this.width = double.infinity,
     this.height = 50,
     this.borderRadius = 14,
     this.fontSize = 14,
     this.disabled = false,
-  });
+  }) : _variant = _ButtonVariant.ghost;
 
   const Button.soft({
     super.key,
     required this.onPressed,
     required this.label,
     this.icon,
-    this.backgroundColor = AppColors.primarySoft,
+    this.backgroundColor,
     this.textColor = AppColors.primaryStrong,
     this.borderColor,
     this.width = double.infinity,
@@ -58,15 +59,33 @@ class Button extends StatelessWidget {
     this.borderRadius = 14,
     this.fontSize = 14,
     this.disabled = false,
-  });
+  }) : _variant = _ButtonVariant.soft;
 
   @override
   Widget build(BuildContext context) {
+    final resolvedBg =
+        backgroundColor ??
+        switch (_variant) {
+          _ButtonVariant.filled => AppColors.primary,
+          _ButtonVariant.ghost => AppColors.surface,
+          _ButtonVariant.soft => AppColors.primarySoft,
+        };
+    final resolvedText =
+        textColor ??
+        switch (_variant) {
+          _ButtonVariant.filled => Colors.white,
+          _ButtonVariant.ghost => AppColors.text,
+          _ButtonVariant.soft => AppColors.primaryStrong,
+        };
+    final resolvedBorder =
+        borderColor ??
+        (_variant == _ButtonVariant.ghost ? AppColors.border : null);
+
     return SizedBox(
       width: width,
       height: height,
       child: Material(
-        color: disabled ? AppColors.border : backgroundColor,
+        color: disabled ? AppColors.border : resolvedBg,
         borderRadius: BorderRadius.circular(borderRadius),
         child: InkWell(
           onTap: disabled ? null : onPressed,
@@ -74,8 +93,8 @@ class Button extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(borderRadius),
-              border: borderColor != null
-                  ? Border.all(color: borderColor!)
+              border: resolvedBorder != null
+                  ? Border.all(color: resolvedBorder)
                   : null,
             ),
             child: Row(
@@ -85,7 +104,7 @@ class Button extends StatelessWidget {
                 Text(
                   label,
                   style: GoogleFonts.plusJakartaSans(
-                    color: disabled ? AppColors.textMuted : textColor,
+                    color: disabled ? AppColors.textMuted : resolvedText,
                     fontSize: fontSize,
                     fontWeight: FontWeight.w600,
                     letterSpacing: -0.14,
@@ -99,3 +118,5 @@ class Button extends StatelessWidget {
     );
   }
 }
+
+enum _ButtonVariant { filled, ghost, soft }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_kendaraanku_app/core/components/motovault_logo.dart';
 import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
 import 'package:flutter_kendaraanku_app/core/constants/strings.dart';
 import 'package:flutter_kendaraanku_app/data/local/auth_local_datasource.dart';
@@ -69,6 +70,7 @@ class _SplashPageState extends State<SplashPage> {
           gradient: AppColors.heroGradientVertical,
         ),
         child: Stack(
+          alignment: Alignment.center,
           children: [
             Positioned(
               right: -80,
@@ -78,7 +80,7 @@ class _SplashPageState extends State<SplashPage> {
                 height: 240,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.10),
+                  color: Colors.white.withValues(alpha: 0.08),
                 ),
               ),
             ),
@@ -90,52 +92,43 @@ class _SplashPageState extends State<SplashPage> {
                 height: 180,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.08),
+                  color: Colors.white.withValues(alpha: 0.06),
                 ),
               ),
             ),
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 96,
-                    height: 96,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.16),
-                      borderRadius: BorderRadius.circular(28),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.25),
-                        width: 1.5,
+            SizedBox(
+              width: double.infinity,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const MotoVaultLogo(size: 104),
+                    const SizedBox(height: 22),
+                    Text(
+                      AppStrings.appName,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 34,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: -0.68,
                       ),
                     ),
-                    child: const Icon(
-                      Icons.shield_rounded,
-                      size: 50,
-                      color: Colors.white,
+                    const SizedBox(height: 8),
+                    Text(
+                      AppStrings.appTagline,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white.withValues(alpha: 0.88),
+                        letterSpacing: 0.2,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    AppStrings.appName,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 34,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      letterSpacing: -0.68,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    AppStrings.appTagline,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white.withValues(alpha: 0.88),
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             Positioned(

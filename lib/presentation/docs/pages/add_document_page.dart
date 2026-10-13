@@ -16,12 +16,14 @@ class AddDocumentPage extends StatefulWidget {
   final int userId;
   final List<VehicleModel> vehicles;
   final int? initialVehicleId;
+  final VehicleDocumentModel? initialDoc;
 
   const AddDocumentPage({
     super.key,
     required this.userId,
     required this.vehicles,
     this.initialVehicleId,
+    this.initialDoc,
   });
 
   @override
@@ -41,11 +43,29 @@ class _AddDocumentPageState extends State<AddDocumentPage> {
   File? _photoFile;
   bool _isSaving = false;
 
+  bool get _isEditMode => widget.initialDoc != null;
+
   @override
   void initState() {
     super.initState();
-    _selectedVehicleId =
-        widget.initialVehicleId ?? widget.vehicles.first.id!;
+    final initial = widget.initialDoc;
+    if (initial != null) {
+      final hasVehicle = widget.vehicles.any((v) => v.id == initial.vehicleId);
+      _selectedVehicleId =
+          hasVehicle ? initial.vehicleId : widget.vehicles.first.id!;
+      _selectedType = initial.documentType;
+      _numberController.text = initial.documentNumber ?? '';
+      _issueDate = initial.issueDate;
+      _expiryDate = initial.expiryDate;
+      _isPermanent = initial.isPermanent;
+      _notesController.text = initial.notes ?? '';
+      if (initial.imagePath != null && File(initial.imagePath!).existsSync()) {
+        _photoFile = File(initial.imagePath!);
+      }
+    } else {
+      _selectedVehicleId =
+          widget.initialVehicleId ?? widget.vehicles.first.id!;
+    }
   }
 
   @override
@@ -53,6 +73,14 @@ class _AddDocumentPageState extends State<AddDocumentPage> {
     _numberController.dispose();
     _notesController.dispose();
     super.dispose();
+  }
+
+  void _applyExpiryPresetYears(int years) {
+    final base = _expiryDate ?? _issueDate ?? DateTime.now();
+    setState(() {
+      _isPermanent = false;
+      _expiryDate = DateTime(base.year + years, base.month, base.day);
+    });
   }
 
   Future<void> _pickDate({required bool isIssue}) async {
@@ -66,7 +94,7 @@ class _AddDocumentPageState extends State<AddDocumentPage> {
       lastDate: DateTime(2100),
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.light(
+          colorScheme: ColorScheme.light(
             primary: AppColors.primary,
             onPrimary: Colors.white,
             surface: AppColors.surface,
@@ -156,6 +184,7 @@ class _AddDocumentPageState extends State<AddDocumentPage> {
 
     final now = DateTime.now();
     final doc = VehicleDocumentModel(
+      id: widget.initialDoc?.id,
       vehicleId: _selectedVehicleId,
       documentType: _selectedType,
       documentNumber: _numberController.text.trim().isEmpty
@@ -167,14 +196,20 @@ class _AddDocumentPageState extends State<AddDocumentPage> {
       notes: _notesController.text.trim().isEmpty
           ? null
           : _notesController.text.trim(),
-      createdAt: now,
+      createdAt: widget.initialDoc?.createdAt ?? now,
       updatedAt: now,
     );
 
     if (mounted) {
-      context
-          .read<VehicleDocumentBloc>()
-          .add(AddDocument(doc, widget.userId));
+      if (_isEditMode) {
+        context
+            .read<VehicleDocumentBloc>()
+            .add(UpdateDocument(doc, widget.userId));
+      } else {
+        context
+            .read<VehicleDocumentBloc>()
+            .add(AddDocument(doc, widget.userId));
+      }
       Navigator.pop(context, true);
     }
   }
@@ -212,14 +247,14 @@ class _AddDocumentPageState extends State<AddDocumentPage> {
       child: Row(
         children: [
           AppIconButton(
-            icon: const Icon(Icons.arrow_back_ios_new,
+            icon: Icon(Icons.arrow_back_ios_new,
                 size: 16, color: AppColors.text),
             onTap: () => Navigator.pop(context),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Tambah Dokumen',
+              _isEditMode ? 'Edit Dokumen' : 'Tambah Dokumen',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -288,7 +323,7 @@ class _AddDocumentPageState extends State<AddDocumentPage> {
               child: DropdownButton<int>(
                 isExpanded: true,
                 value: _selectedVehicleId,
-                icon: const Icon(Icons.keyboard_arrow_down_rounded,
+                icon: Icon(Icons.keyboard_arrow_down_rounded,
                     color: AppColors.textMuted),
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 14,
@@ -346,7 +381,7 @@ class _AddDocumentPageState extends State<AddDocumentPage> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.lock_clock_outlined,
+                  Icon(Icons.lock_clock_outlined,
                       size: 18, color: AppColors.textMuted),
                   const SizedBox(width: 10),
                   Expanded(
@@ -382,6 +417,39 @@ class _AddDocumentPageState extends State<AddDocumentPage> {
               placeholder: 'Pilih tanggal kadaluarsa',
               onTap: () => _pickDate(isIssue: false),
               onClear: () => setState(() => _expiryDate = null),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final preset in const [
+                  ('+1 Tahun (Pajak/STNK)', 1),
+                  ('+5 Tahun (Plat/SIM)', 5),
+                ])
+                  GestureDetector(
+                    onTap: () => _applyExpiryPresetYears(preset.$2),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primarySofter,
+                        borderRadius: BorderRadius.circular(100),
+                        border: Border.all(color: AppColors.primarySoft),
+                      ),
+                      child: Text(
+                        preset.$1,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 14),
           ],
@@ -444,7 +512,7 @@ class _AddDocumentPageState extends State<AddDocumentPage> {
                             ],
                           ),
                         ),
-                        const Icon(Icons.chevron_right_rounded,
+                        Icon(Icons.chevron_right_rounded,
                             color: AppColors.textMuted),
                       ],
                     )
@@ -472,7 +540,7 @@ class _AddDocumentPageState extends State<AddDocumentPage> {
                         ),
                         GestureDetector(
                           onTap: () => setState(() => _photoFile = null),
-                          child: const Icon(Icons.close_rounded,
+                          child: Icon(Icons.close_rounded,
                               size: 20, color: AppColors.textMuted),
                         ),
                       ],
@@ -538,7 +606,7 @@ class _AddDocumentPageState extends State<AddDocumentPage> {
         ),
         child: Row(
           children: [
-            const Icon(Icons.event_outlined,
+            Icon(Icons.event_outlined,
                 size: 18, color: AppColors.textMuted),
             const SizedBox(width: 10),
             Text(
@@ -555,11 +623,11 @@ class _AddDocumentPageState extends State<AddDocumentPage> {
             if (value != null)
               GestureDetector(
                 onTap: onClear,
-                child: const Icon(Icons.close_rounded,
+                child: Icon(Icons.close_rounded,
                     size: 18, color: AppColors.textMuted),
               )
             else
-              const Icon(Icons.keyboard_arrow_down_rounded,
+              Icon(Icons.keyboard_arrow_down_rounded,
                   size: 20, color: AppColors.textMuted),
           ],
         ),
@@ -661,7 +729,7 @@ class _AddDocumentPageState extends State<AddDocumentPage> {
                     )
                   else ...[
                     Text(
-                      'Simpan Dokumen',
+                      _isEditMode ? 'Simpan Perubahan' : 'Simpan Dokumen',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,

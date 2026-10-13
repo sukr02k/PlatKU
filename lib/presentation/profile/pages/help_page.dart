@@ -80,7 +80,7 @@ class HelpPage extends StatelessWidget {
                       ),
                     ),
                     if (!isLast)
-                      const Divider(
+                      Divider(
                         height: 1,
                         color: AppColors.divider,
                         indent: 16,

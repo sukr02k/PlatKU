@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_kendaraanku_app/core/components/vehicle_switcher_bar.dart';
 import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
 import 'package:flutter_kendaraanku_app/core/utils/formatters.dart';
 import 'package:flutter_kendaraanku_app/data/models/fuel_log_model.dart';
@@ -46,7 +47,7 @@ class FuelPage extends StatelessWidget {
                           color: AppColors.tintPeachBg,
                           borderRadius: BorderRadius.circular(28),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.local_gas_station_rounded,
                           color: AppColors.tintPeachFg,
                           size: 42,
@@ -127,6 +128,7 @@ class FuelPage extends StatelessWidget {
         }
 
         return BlocProvider(
+          key: ValueKey(vehicleId),
           create: (context) => FuelLogBloc(FuelLogRepository())
             ..add(LoadFuelLogs(vehicleId!)),
           child: _FuelPageContent(vehicleId: vehicleId),
@@ -178,7 +180,7 @@ class _FuelPageContent extends StatelessWidget {
                           onPressed: () => context
                               .read<FuelLogBloc>()
                               .add(LoadFuelLogs(vehicleId)),
-                          child: Text('Coba Lagi'),
+                          child: const Text('Coba Lagi'),
                         ),
                       ],
                     ),
@@ -196,6 +198,7 @@ class _FuelPageContent extends StatelessWidget {
                     children: [
                       SizedBox(height: MediaQuery.of(context).padding.top),
                       _buildAppBar(context),
+                      const VehicleSwitcherBar(),
                       const SizedBox(height: 4),
                       _buildSummaryCard(state.stats),
                       if (state.stats.monthlyData.isNotEmpty)
@@ -214,7 +217,8 @@ class _FuelPageContent extends StatelessWidget {
           ),
           // App bar always visible even during loading/empty
           BlocBuilder<FuelLogBloc, FuelLogState>(
-            buildWhen: (prev, curr) => false,
+            buildWhen: (prev, curr) => prev.runtimeType != curr.runtimeType ||
+                (prev is FuelLogLoaded && curr is FuelLogLoaded && prev.logs.isEmpty != curr.logs.isEmpty),
             builder: (context, state) {
               if (state is FuelLogLoaded && state.logs.isNotEmpty) {
                 return const SizedBox.shrink();
@@ -230,6 +234,7 @@ class _FuelPageContent extends StatelessWidget {
                     children: [
                       SizedBox(height: MediaQuery.of(context).padding.top),
                       _buildAppBar(context),
+                      const VehicleSwitcherBar(),
                     ],
                   ),
                 ),
@@ -363,7 +368,7 @@ class _FuelPageContent extends StatelessWidget {
                   border: Border.all(color: AppColors.border),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.chevron_left,
                   color: AppColors.text,
                   size: 22,
@@ -703,15 +708,44 @@ class _FuelPageContent extends StatelessWidget {
 
   void _showFuelDetail(BuildContext context, FuelLogModel log) {
     final fuelLogBloc = context.read<FuelLogBloc>();
+    final vehicleBloc = context.read<VehicleBloc?>();
+
+    void refreshVehicles() {
+      final vState = vehicleBloc?.state;
+      if (vState is VehicleLoaded && vState.selectedVehicle != null) {
+        Future.delayed(const Duration(milliseconds: 120), () {
+          vehicleBloc?.add(LoadVehicles(vState.selectedVehicle!.userId));
+        });
+      }
+    }
+
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => FuelLogDetailSheet(
         log: log,
+        onEdit: () async {
+          final result = await Navigator.of(context).push<bool>(
+            MaterialPageRoute(
+              builder: (_) => BlocProvider.value(
+                value: fuelLogBloc,
+                child: AddFuelLogPage(
+                  vehicleId: vehicleId,
+                  initialLog: log,
+                ),
+              ),
+            ),
+          );
+          if (result == true && context.mounted) {
+            fuelLogBloc.add(LoadFuelLogs(vehicleId));
+            refreshVehicles();
+          }
+        },
         onDelete: () {
           if (log.id != null) {
             fuelLogBloc.add(DeleteFuelLog(log.id!, vehicleId));
+            refreshVehicles();
           }
         },
       ),
@@ -749,7 +783,7 @@ class _FuelPageContent extends StatelessWidget {
                   color: AppColors.tintPeachBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.local_gas_station_rounded,
                   color: AppColors.tintPeachFg,
                   size: 20,
@@ -939,20 +973,22 @@ class _FuelPageContent extends StatelessWidget {
 // ─── Detail Bottom Sheet ──────────────────────────────────────────────────────
 class FuelLogDetailSheet extends StatelessWidget {
   final FuelLogModel log;
+  final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   const FuelLogDetailSheet({
     super.key,
     required this.log,
+    required this.onEdit,
     required this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: SafeArea(
         top: false,
@@ -985,7 +1021,7 @@ class FuelLogDetailSheet extends StatelessWidget {
                       color: AppColors.tintPeachBg,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.local_gas_station_rounded,
+                    child: Icon(Icons.local_gas_station_rounded,
                         color: AppColors.tintPeachFg, size: 22),
                   ),
                   const SizedBox(width: 12),
@@ -1095,28 +1131,61 @@ class FuelLogDetailSheet extends StatelessWidget {
                 ),
               ],
               const SizedBox(height: 18),
-              // Delete button
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: OutlinedButton.icon(
-                  onPressed: () => _confirmDelete(context),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.danger,
-                    side: const BorderSide(color: AppColors.danger),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+              // Edit & Delete buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 48,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          onEdit();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        icon: const Icon(Icons.edit_outlined, size: 18),
+                        label: Text(
+                          'Edit',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                  icon: const Icon(Icons.delete_outline_rounded, size: 18),
-                  label: Text(
-                    'Hapus Catatan',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: SizedBox(
+                      height: 48,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _confirmDelete(context),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.danger,
+                          side: const BorderSide(color: AppColors.danger),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                        label: Text(
+                          'Hapus',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
             ],
           ),

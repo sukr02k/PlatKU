@@ -132,7 +132,7 @@ class _ScanReceiptPageState extends State<ScanReceiptPage> {
       child: Row(
         children: [
           AppIconButton(
-            icon: const Icon(Icons.arrow_back_ios_new,
+            icon: Icon(Icons.arrow_back_ios_new,
                 size: 16, color: AppColors.text),
             onTap: () => Navigator.pop(context),
           ),
@@ -286,7 +286,7 @@ class _ScanReceiptPageState extends State<ScanReceiptPage> {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded,
+            Icon(Icons.chevron_right_rounded,
                 color: AppColors.textMuted),
           ],
         ),
@@ -387,7 +387,7 @@ class _ScanReceiptPageState extends State<ScanReceiptPage> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.refresh_rounded,
+                        Icon(Icons.refresh_rounded,
                             size: 16, color: AppColors.text),
                         const SizedBox(width: 6),
                         Text(
@@ -419,7 +419,7 @@ class _ScanReceiptPageState extends State<ScanReceiptPage> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.image_outlined,
+                        Icon(Icons.image_outlined,
                             size: 16, color: AppColors.text),
                         const SizedBox(width: 6),
                         Text(
@@ -485,7 +485,7 @@ class _ScanReceiptPageState extends State<ScanReceiptPage> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline_rounded,
+          Icon(Icons.error_outline_rounded,
               color: AppColors.tintRoseFg, size: 20),
           const SizedBox(width: 10),
           Expanded(
@@ -556,7 +556,7 @@ class _ScanReceiptPageState extends State<ScanReceiptPage> {
             ],
           ),
           const SizedBox(height: 12),
-          const Divider(color: AppColors.divider, height: 1),
+          Divider(color: AppColors.divider, height: 1),
           const SizedBox(height: 8),
           _row('Tanggal', p.formattedDate),
           if (isFuel) ...[

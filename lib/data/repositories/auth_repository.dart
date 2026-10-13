@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:flutter_kendaraanku_app/core/utils/password_hasher.dart';
 import 'package:flutter_kendaraanku_app/data/database_helper.dart';
 import 'package:flutter_kendaraanku_app/data/models/user_model.dart';
 
@@ -23,10 +24,11 @@ class AuthRepository {
       }
 
       final now = DateTime.now();
+      final hashedPassword = PasswordHasher.hash(password);
       final id = await db.insert('users', {
         'name': name,
         'email': email,
-        'password': password,
+        'password': hashedPassword,
         'created_at': now.toIso8601String(),
         'updated_at': now.toIso8601String(),
       });
@@ -35,7 +37,7 @@ class AuthRepository {
         id: id,
         name: name,
         email: email,
-        password: password,
+        password: hashedPassword,
         createdAt: now,
         updatedAt: now,
       );
@@ -53,15 +55,35 @@ class AuthRepository {
       final db = await _dbHelper.database;
       final results = await db.query(
         'users',
-        where: 'email = ? AND password = ?',
-        whereArgs: [email, password],
+        where: 'email = ?',
+        whereArgs: [email],
       );
 
       if (results.isEmpty) {
         return const Left('Email atau kata sandi salah');
       }
 
-      return Right(UserModel.fromMap(results.first));
+      final user = UserModel.fromMap(results.first);
+      if (!PasswordHasher.verify(password, user.password)) {
+        return const Left('Email atau kata sandi salah');
+      }
+
+      // Auto-upgrade legacy plain-text password to salted SHA-256 hash
+      if (!PasswordHasher.isHashed(user.password) && user.id != null) {
+        final upgraded = user.copyWith(
+          password: PasswordHasher.hash(password),
+          updatedAt: DateTime.now(),
+        );
+        await db.update(
+          'users',
+          upgraded.toMap(),
+          where: 'id = ?',
+          whereArgs: [user.id],
+        );
+        return Right(upgraded);
+      }
+
+      return Right(user);
     } catch (e) {
       return Left('Gagal masuk: $e');
     }
@@ -81,9 +103,13 @@ class AuthRepository {
   Future<Either<String, bool>> updateUser(UserModel user) async {
     try {
       final db = await _dbHelper.database;
+      final securedUser = user.copyWith(
+        password: PasswordHasher.hash(user.password),
+        updatedAt: DateTime.now(),
+      );
       await db.update(
         'users',
-        user.copyWith(updatedAt: DateTime.now()).toMap(),
+        securedUser.toMap(),
         where: 'id = ?',
         whereArgs: [user.id],
       );

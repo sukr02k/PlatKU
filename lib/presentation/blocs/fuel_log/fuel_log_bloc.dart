@@ -51,6 +51,7 @@ class FuelLogBloc extends Bloc<FuelLogEvent, FuelLogState> {
     await result.fold(
       (error) async => emit(FuelLogError(error)),
       (_) async {
+        await _vehicleRepository.recalculateOdometer(event.fuelLog.vehicleId);
         await _vehicleRepository.syncOdometerIfHigher(
           event.fuelLog.vehicleId,
           event.fuelLog.odometer,
@@ -62,9 +63,12 @@ class FuelLogBloc extends Bloc<FuelLogEvent, FuelLogState> {
 
   Future<void> _onDelete(DeleteFuelLog event, Emitter<FuelLogState> emit) async {
     final result = await _repository.delete(event.id);
-    result.fold(
-      (error) => emit(FuelLogError(error)),
-      (_) => add(LoadFuelLogs(event.vehicleId)),
+    await result.fold(
+      (error) async => emit(FuelLogError(error)),
+      (_) async {
+        await _vehicleRepository.recalculateOdometer(event.vehicleId);
+        add(LoadFuelLogs(event.vehicleId));
+      },
     );
   }
 

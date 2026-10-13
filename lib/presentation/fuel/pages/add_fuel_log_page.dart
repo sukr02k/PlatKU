@@ -8,6 +8,7 @@ import 'package:flutter_kendaraanku_app/core/components/app_icon_button.dart';
 import 'package:flutter_kendaraanku_app/core/utils/formatters.dart';
 import 'package:flutter_kendaraanku_app/core/utils/receipt_parser.dart';
 import 'package:flutter_kendaraanku_app/data/models/fuel_log_model.dart';
+import 'package:flutter_kendaraanku_app/data/repositories/vehicle_repository.dart';
 import 'package:flutter_kendaraanku_app/presentation/blocs/fuel_log/fuel_log_bloc.dart';
 import 'package:flutter_kendaraanku_app/presentation/blocs/fuel_log/fuel_log_event.dart';
 import 'package:flutter_kendaraanku_app/presentation/scan/pages/scan_receipt_page.dart';
@@ -16,11 +17,13 @@ import 'package:intl/intl.dart';
 class AddFuelLogPage extends StatefulWidget {
   final int vehicleId;
   final String defaultFuelType;
+  final FuelLogModel? initialLog;
 
   const AddFuelLogPage({
     super.key,
     required this.vehicleId,
     this.defaultFuelType = 'Pertalite',
+    this.initialLog,
   });
 
   @override
@@ -41,6 +44,7 @@ class _AddFuelLogPageState extends State<AddFuelLogPage> {
   bool _isFullTank = true;
   bool _isSaving = false;
   double _calculatedTotal = 0;
+  double _currentOdometer = 0;
   String? _receiptImagePath;
 
   final _fuelTypes = [
@@ -51,14 +55,52 @@ class _AddFuelLogPageState extends State<AddFuelLogPage> {
     'Listrik',
   ];
 
+  bool get _isEditMode => widget.initialLog != null;
+
   @override
   void initState() {
     super.initState();
-    final idx = _fuelTypes.indexOf(widget.defaultFuelType);
-    if (idx >= 0) _selectedFuel = idx;
+    final initial = widget.initialLog;
+    if (initial != null) {
+      _selectedDate = initial.date;
+      _odometerController.text = Formatters.thousands(initial.odometer.round());
+      final litersStr = initial.liters == initial.liters.roundToDouble()
+          ? initial.liters.toInt().toString()
+          : initial.liters.toString();
+      _litersController.text = litersStr;
+      _priceController.text =
+          Formatters.thousands(initial.pricePerLiter.round());
+      _stationController.text = initial.stationName ?? '';
+      _notesController.text = initial.notes ?? '';
+      _isFullTank = initial.isFullTank;
+      _receiptImagePath = initial.receiptImagePath;
+      _calculatedTotal = initial.totalCost;
+      final idx = _fuelTypes.indexOf(initial.fuelType);
+      if (idx >= 0) _selectedFuel = idx;
+    } else {
+      final idx = _fuelTypes.indexOf(widget.defaultFuelType);
+      if (idx >= 0) _selectedFuel = idx;
+    }
 
     _litersController.addListener(_updateTotal);
     _priceController.addListener(_updateTotal);
+    _loadVehicleOdometer();
+  }
+
+  Future<void> _loadVehicleOdometer() async {
+    final res = await VehicleRepository().getById(widget.vehicleId);
+    res.fold((_) => null, (vehicle) {
+      if (mounted) {
+        setState(() => _currentOdometer = vehicle.initialOdometer);
+      }
+    });
+  }
+
+  bool get _isSelectedDateToday {
+    final now = DateTime.now();
+    return _selectedDate.year == now.year &&
+        _selectedDate.month == now.month &&
+        _selectedDate.day == now.day;
   }
 
   @override
@@ -86,7 +128,7 @@ class _AddFuelLogPageState extends State<AddFuelLogPage> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
+            colorScheme: ColorScheme.light(
               primary: AppColors.primary,
               onPrimary: Colors.white,
               surface: AppColors.surface,
@@ -108,6 +150,7 @@ class _AddFuelLogPageState extends State<AddFuelLogPage> {
     setState(() => _isSaving = true);
 
     final fuelLog = FuelLogModel(
+      id: widget.initialLog?.id,
       vehicleId: widget.vehicleId,
       date: _selectedDate,
       odometer: Formatters.parseFormattedNumber(_odometerController.text),
@@ -123,11 +166,15 @@ class _AddFuelLogPageState extends State<AddFuelLogPage> {
       notes: _notesController.text.trim().isEmpty
           ? null
           : _notesController.text.trim(),
-      createdAt: DateTime.now(),
+      createdAt: widget.initialLog?.createdAt ?? DateTime.now(),
     );
 
     if (mounted) {
-      context.read<FuelLogBloc>().add(AddFuelLog(fuelLog));
+      if (_isEditMode) {
+        context.read<FuelLogBloc>().add(UpdateFuelLog(fuelLog));
+      } else {
+        context.read<FuelLogBloc>().add(AddFuelLog(fuelLog));
+      }
       Navigator.pop(context, true);
     }
   }
@@ -165,14 +212,14 @@ class _AddFuelLogPageState extends State<AddFuelLogPage> {
       child: Row(
         children: [
           AppIconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 16,
+            icon: Icon(Icons.arrow_back_ios_new, size: 16,
                 color: AppColors.text),
             onTap: () => Navigator.pop(context),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Catat BBM',
+              _isEditMode ? 'Edit Catatan BBM' : 'Catat BBM',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -284,7 +331,7 @@ class _AddFuelLogPageState extends State<AddFuelLogPage> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.calendar_today_outlined, size: 18,
+                  Icon(Icons.calendar_today_outlined, size: 18,
                       color: AppColors.textMuted),
                   const SizedBox(width: 10),
                   Text(
@@ -296,7 +343,7 @@ class _AddFuelLogPageState extends State<AddFuelLogPage> {
                     ),
                   ),
                   const Spacer(),
-                  const Icon(Icons.keyboard_arrow_down_rounded, size: 20,
+                  Icon(Icons.keyboard_arrow_down_rounded, size: 20,
                       color: AppColors.textMuted),
                 ],
               ),
@@ -307,8 +354,12 @@ class _AddFuelLogPageState extends State<AddFuelLogPage> {
           // Odometer
           _buildTextField(
             controller: _odometerController,
-            label: 'Odometer (km)',
-            hint: 'Contoh: 45.231',
+            label: _currentOdometer > 0
+                ? 'Odometer (km) · Saat ini: ${Formatters.thousands(_currentOdometer.round())} km'
+                : 'Odometer (km)',
+            hint: _currentOdometer > 0
+                ? 'Min. ${Formatters.thousands(_currentOdometer.round())}'
+                : 'Contoh: 45.231',
             icon: Icons.speed_outlined,
             trailing: 'km',
             keyboardType: TextInputType.number,
@@ -320,6 +371,12 @@ class _AddFuelLogPageState extends State<AddFuelLogPage> {
               if (v == null || v.trim().isEmpty) return 'Odometer wajib diisi';
               final val = Formatters.parseFormattedNumber(v);
               if (val <= 0) return 'Harus lebih dari 0';
+              if (!_isEditMode &&
+                  _isSelectedDateToday &&
+                  _currentOdometer > 0 &&
+                  val < _currentOdometer) {
+                return 'Odometer tidak boleh mundur di bawah ${Formatters.thousands(_currentOdometer.round())} km';
+              }
               return null;
             },
           ),
@@ -458,7 +515,7 @@ class _AddFuelLogPageState extends State<AddFuelLogPage> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.local_gas_station_rounded, size: 18,
+                Icon(Icons.local_gas_station_rounded, size: 18,
                     color: AppColors.textMuted),
                 const SizedBox(width: 10),
                 Expanded(
@@ -530,7 +587,7 @@ class _AddFuelLogPageState extends State<AddFuelLogPage> {
                   GestureDetector(
                     onTap: () =>
                         setState(() => _receiptImagePath = null),
-                    child: const Icon(Icons.close_rounded,
+                    child: Icon(Icons.close_rounded,
                         size: 20, color: AppColors.textMuted),
                   ),
                 ],
@@ -702,7 +759,7 @@ class _AddFuelLogPageState extends State<AddFuelLogPage> {
                     )
                   else ...[
                     Text(
-                      'Simpan',
+                      _isEditMode ? 'Simpan Perubahan' : 'Simpan',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,

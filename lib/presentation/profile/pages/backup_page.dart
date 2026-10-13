@@ -1,11 +1,14 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
+import 'package:flutter_kendaraanku_app/data/database_helper.dart';
 
 class BackupPage extends StatefulWidget {
   const BackupPage({super.key});
@@ -15,6 +18,9 @@ class BackupPage extends StatefulWidget {
 }
 
 class _BackupPageState extends State<BackupPage> {
+  static const MethodChannel _backupChannel =
+      MethodChannel('com.abdan.motovault/backup');
+
   List<_BackupFile> _backups = [];
   bool _loading = true;
   bool _busy = false;
@@ -80,6 +86,77 @@ class _BackupPageState extends State<BackupPage> {
     }
   }
 
+  Future<bool> _isValidSqliteFile(File file) async {
+    try {
+      if (!await file.exists()) return false;
+      final length = await file.length();
+      if (length < 100) return false;
+      final bytes = await file.openRead(0, 15).expand((b) => b).toList();
+      final header = ascii.decode(bytes, allowInvalid: true);
+      return header.startsWith('SQLite format 3');
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _applyRestoreFromFile(File sourceFile) async {
+    await DatabaseHelper.getInstance().close();
+    final dbPath = await getDatabasesPath();
+    final targetPath = '$dbPath/kendaraanku.db';
+    final walFile = File('$targetPath-wal');
+    final shmFile = File('$targetPath-shm');
+    if (await walFile.exists()) await walFile.delete();
+    if (await shmFile.exists()) await shmFile.delete();
+    await sourceFile.copy(targetPath);
+  }
+
+  Future<void> _importExternalBackup() async {
+    try {
+      final pickedPath =
+          await _backupChannel.invokeMethod<String>('pickBackupFile');
+      if (pickedPath == null || pickedPath.isEmpty) return;
+
+      final pickedFile = File(pickedPath);
+      final isValid = await _isValidSqliteFile(pickedFile);
+      if (!isValid) {
+        _showSnack(
+          'File tidak valid. Pilih file backup database (.db) MotoVault.',
+          danger: true,
+        );
+        return;
+      }
+
+      if (!mounted) return;
+      final confirm = await _confirmDialog(
+        title: 'Impor & Restore Backup?',
+        message:
+            'File backup valid terdeteksi. File akan disimpan ke riwayat backup dan langsung di-restore ke aplikasi.',
+        confirmLabel: 'Impor & Restore',
+      );
+      if (confirm != true) return;
+
+      setState(() => _busy = true);
+      final dir = await getApplicationDocumentsDirectory();
+      final ts = DateTime.now().millisecondsSinceEpoch;
+      final savedCopy =
+          await pickedFile.copy('${dir.path}/kendaraanku_backup_$ts.db');
+      await _applyRestoreFromFile(savedCopy);
+      await _loadBackups();
+      _showSnack(
+        'Backup eksternal berhasil diimpor & di-restore!',
+      );
+    } on MissingPluginException {
+      _showSnack(
+        'Fitur pilih file eksternal hanya tersedia di perangkat Android.',
+        danger: true,
+      );
+    } catch (e) {
+      _showSnack('Gagal impor backup: $e', danger: true);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Future<void> _restore(_BackupFile b) async {
     final confirm = await _confirmDialog(
       title: 'Restore Backup?',
@@ -91,10 +168,9 @@ class _BackupPageState extends State<BackupPage> {
 
     setState(() => _busy = true);
     try {
-      final dbPath = await getDatabasesPath();
-      await b.file.copy('$dbPath/kendaraanku.db');
+      await _applyRestoreFromFile(b.file);
       _showSnack(
-          'Backup berhasil di-restore. Mulai ulang aplikasi untuk efek penuh.');
+          'Backup berhasil di-restore. Data telah diperbarui.');
     } catch (e) {
       _showSnack('Gagal restore: $e', danger: true);
     } finally {
@@ -271,6 +347,42 @@ class _BackupPageState extends State<BackupPage> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 10),
+                GestureDetector(
+                  onTap: _busy ? null : _importExternalBackup,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: AppColors.primary,
+                        width: 1.4,
+                      ),
+                    ),
+                    child: Center(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.file_open_outlined,
+                            color: AppColors.primary,
+                            size: 19,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Impor File Backup dari HP (.db)',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 22),
                 Row(
                   children: [
@@ -366,7 +478,7 @@ class _BackupPageState extends State<BackupPage> {
               color: AppColors.tintBlueBg,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Icon(Icons.folder_open_rounded,
+            child: Icon(Icons.folder_open_rounded,
                 color: AppColors.tintBlueFg, size: 28),
           ),
           const SizedBox(height: 14),
@@ -412,7 +524,7 @@ class _BackupPageState extends State<BackupPage> {
                 color: AppColors.tintMintBg,
                 borderRadius: BorderRadius.circular(11),
               ),
-              child: const Icon(Icons.snippet_folder_rounded,
+              child: Icon(Icons.snippet_folder_rounded,
                   color: AppColors.tintMintFg, size: 20),
             ),
             const SizedBox(width: 12),
@@ -442,7 +554,7 @@ class _BackupPageState extends State<BackupPage> {
               ),
             ),
             PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert_rounded,
+              icon: Icon(Icons.more_vert_rounded,
                   color: AppColors.textMuted),
               onSelected: (v) {
                 if (v == 'share') _share(b);
@@ -454,7 +566,7 @@ class _BackupPageState extends State<BackupPage> {
                   value: 'share',
                   child: Row(
                     children: [
-                      const Icon(Icons.ios_share_rounded,
+                      Icon(Icons.ios_share_rounded,
                           color: AppColors.text, size: 18),
                       const SizedBox(width: 10),
                       Text('Kirim',

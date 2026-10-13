@@ -1,39 +1,64 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_kendaraanku_app/core/theme_controller.dart';
 
 class AppColors {
+  static bool get isDark => ThemeController.instance.isDark;
+
   static const Color primary = Color(0xFF2563EB);
   static const Color primaryStrong = Color(0xFF1D4ED8);
-  static const Color primarySoft = Color(0xFFDBEAFE);
-  static const Color primarySofter = Color(0xFFEFF6FF);
+  static Color get primarySoft =>
+      isDark ? const Color(0xFF1E3A8A) : const Color(0xFFDBEAFE);
+  static Color get primarySofter =>
+      isDark ? const Color(0xFF172554) : const Color(0xFFEFF6FF);
   static const Color accent = Color(0xFF06B6D4);
   static const Color onPrimary = Color(0xFFFFFFFF);
 
-  static const Color bg = Color(0xFFF4F7FB);
-  static const Color surface = Color(0xFFFFFFFF);
-  static const Color surface2 = Color(0xFFF8FAFC);
+  static Color get bg =>
+      isDark ? const Color(0xFF0B0F19) : const Color(0xFFF4F7FB);
+  static Color get surface =>
+      isDark ? const Color(0xFF151C2C) : const Color(0xFFFFFFFF);
+  static Color get surface2 =>
+      isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC);
 
   static const Color heroTop = Color(0xFF0F172A);
   static const Color heroBottom = Color(0xFF2563EB);
 
-  static const Color text = Color(0xFF0F172A);
-  static const Color textMuted = Color(0xFF64748B);
-  static const Color textSoft = Color(0xFF94A3B8);
-  static const Color divider = Color(0xFFE2E8F0);
-  static const Color border = Color(0xFFCBD5E1);
+  static Color get text =>
+      isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
+  static Color get textMuted =>
+      isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+  static Color get textSoft =>
+      isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8);
+  static Color get divider =>
+      isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0);
+  static Color get border =>
+      isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1);
 
   // Tints
-  static const Color tintBlueBg = Color(0xFFDBEAFE);
-  static const Color tintBlueFg = Color(0xFF1D4ED8);
-  static const Color tintMintBg = Color(0xFFD1FAE5);
-  static const Color tintMintFg = Color(0xFF047857);
-  static const Color tintPeachBg = Color(0xFFFFEDD5);
-  static const Color tintPeachFg = Color(0xFFC2410C);
-  static const Color tintLavenderBg = Color(0xFFEDE9FE);
-  static const Color tintLavenderFg = Color(0xFF6D28D9);
-  static const Color tintRoseBg = Color(0xFFFFE4E6);
-  static const Color tintRoseFg = Color(0xFFBE123C);
-  static const Color tintAmberBg = Color(0xFFFEF3C7);
-  static const Color tintAmberFg = Color(0xFFB45309);
+  static Color get tintBlueBg =>
+      isDark ? const Color(0xFF1E3A8A) : const Color(0xFFDBEAFE);
+  static Color get tintBlueFg =>
+      isDark ? const Color(0xFF60A5FA) : const Color(0xFF1D4ED8);
+  static Color get tintMintBg =>
+      isDark ? const Color(0xFF064E3B) : const Color(0xFFD1FAE5);
+  static Color get tintMintFg =>
+      isDark ? const Color(0xFF34D399) : const Color(0xFF047857);
+  static Color get tintPeachBg =>
+      isDark ? const Color(0xFF7C2D12) : const Color(0xFFFFEDD5);
+  static Color get tintPeachFg =>
+      isDark ? const Color(0xFFFB923C) : const Color(0xFFC2410C);
+  static Color get tintLavenderBg =>
+      isDark ? const Color(0xFF4C1D95) : const Color(0xFFEDE9FE);
+  static Color get tintLavenderFg =>
+      isDark ? const Color(0xFFA78BFA) : const Color(0xFF6D28D9);
+  static Color get tintRoseBg =>
+      isDark ? const Color(0xFF881337) : const Color(0xFFFFE4E6);
+  static Color get tintRoseFg =>
+      isDark ? const Color(0xFFFB7185) : const Color(0xFFBE123C);
+  static Color get tintAmberBg =>
+      isDark ? const Color(0xFF78350F) : const Color(0xFFFEF3C7);
+  static Color get tintAmberFg =>
+      isDark ? const Color(0xFFFBBF24) : const Color(0xFFB45309);
 
   // Status
   static const Color success = Color(0xFF059669);

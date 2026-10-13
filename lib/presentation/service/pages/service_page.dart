@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_kendaraanku_app/core/components/vehicle_switcher_bar.dart';
 import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
 import 'package:flutter_kendaraanku_app/core/utils/formatters.dart';
 import 'package:flutter_kendaraanku_app/data/models/service_log_model.dart';
@@ -57,6 +58,7 @@ class ServicePage extends StatelessWidget {
         }
 
         return BlocProvider(
+          key: ValueKey(vehicleId),
           create: (context) => ServiceLogBloc(ServiceLogRepository())
             ..add(LoadServiceLogs(vehicleId!)),
           child: _ServicePageContent(vehicleId: vehicleId),
@@ -185,7 +187,7 @@ class _ServicePageContent extends StatelessWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.error_outline_rounded,
                           size: 48,
                           color: AppColors.textSoft,
@@ -223,6 +225,7 @@ class _ServicePageContent extends StatelessWidget {
                     children: [
                       SizedBox(height: MediaQuery.of(context).padding.top),
                       _buildAppBar(context),
+                      const VehicleSwitcherBar(),
                       const SizedBox(height: 4),
                       _buildSummaryHeroCard(state.stats),
                       _buildFilterChips(context, state.stats, state.activeFilter),
@@ -238,7 +241,8 @@ class _ServicePageContent extends StatelessWidget {
           ),
           // App bar always visible during loading/empty
           BlocBuilder<ServiceLogBloc, ServiceLogState>(
-            buildWhen: (prev, curr) => false,
+            buildWhen: (prev, curr) => prev.runtimeType != curr.runtimeType ||
+                (prev is ServiceLogLoaded && curr is ServiceLogLoaded && prev.logs.isEmpty != curr.logs.isEmpty),
             builder: (context, state) {
               if (state is ServiceLogLoaded && (state.logs.isNotEmpty || state.activeFilter != null)) {
                 return const SizedBox.shrink();
@@ -254,6 +258,7 @@ class _ServicePageContent extends StatelessWidget {
                     children: [
                       SizedBox(height: MediaQuery.of(context).padding.top),
                       _buildAppBar(context),
+                      const VehicleSwitcherBar(),
                     ],
                   ),
                 ),
@@ -427,7 +432,7 @@ class _ServicePageContent extends StatelessWidget {
                   border: Border.all(color: AppColors.border),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.chevron_left,
                   color: AppColors.text,
                   size: 22,
@@ -778,15 +783,44 @@ class _ServicePageContent extends StatelessWidget {
 
   void _showServiceDetail(BuildContext context, ServiceLogModel log) {
     final serviceLogBloc = context.read<ServiceLogBloc>();
+    final vehicleBloc = context.read<VehicleBloc?>();
+
+    void refreshVehicles() {
+      final vState = vehicleBloc?.state;
+      if (vState is VehicleLoaded && vState.selectedVehicle != null) {
+        Future.delayed(const Duration(milliseconds: 120), () {
+          vehicleBloc?.add(LoadVehicles(vState.selectedVehicle!.userId));
+        });
+      }
+    }
+
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => ServiceLogDetailSheet(
         log: log,
+        onEdit: () async {
+          final result = await Navigator.of(context).push<bool>(
+            MaterialPageRoute(
+              builder: (_) => BlocProvider.value(
+                value: serviceLogBloc,
+                child: AddServiceLogPage(
+                  vehicleId: vehicleId,
+                  initialLog: log,
+                ),
+              ),
+            ),
+          );
+          if (result == true && context.mounted) {
+            serviceLogBloc.add(LoadServiceLogs(vehicleId));
+            refreshVehicles();
+          }
+        },
         onDelete: () {
           if (log.id != null) {
             serviceLogBloc.add(DeleteServiceLog(log.id!, vehicleId));
+            refreshVehicles();
           }
         },
       ),
@@ -880,7 +914,7 @@ class _ServicePageContent extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.calendar_today_rounded,
                       size: 11,
                       color: AppColors.textMuted,
@@ -908,7 +942,7 @@ class _ServicePageContent extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.speed_rounded,
                       size: 11,
                       color: AppColors.textMuted,
@@ -1032,20 +1066,22 @@ class _ServicePageContent extends StatelessWidget {
 // ─── Detail Bottom Sheet ──────────────────────────────────────────────────────
 class ServiceLogDetailSheet extends StatelessWidget {
   final ServiceLogModel log;
+  final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   const ServiceLogDetailSheet({
     super.key,
     required this.log,
+    required this.onEdit,
     required this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: SafeArea(
         top: false,
@@ -1077,7 +1113,7 @@ class ServiceLogDetailSheet extends StatelessWidget {
                         color: AppColors.tintMintBg,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.build_rounded,
+                      child: Icon(Icons.build_rounded,
                           color: AppColors.tintMintFg, size: 22),
                     ),
                     const SizedBox(width: 12),
@@ -1186,27 +1222,60 @@ class ServiceLogDetailSheet extends StatelessWidget {
                   ),
                 ],
                 const SizedBox(height: 18),
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: OutlinedButton.icon(
-                    onPressed: () => _confirmDelete(context),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.danger,
-                      side: const BorderSide(color: AppColors.danger),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 48,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            onEdit();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          icon: const Icon(Icons.edit_outlined, size: 18),
+                          label: Text(
+                            'Edit',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                    icon: const Icon(Icons.delete_outline_rounded, size: 18),
-                    label: Text(
-                      'Hapus Catatan',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: SizedBox(
+                        height: 48,
+                        child: OutlinedButton.icon(
+                          onPressed: () => _confirmDelete(context),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.danger,
+                            side: const BorderSide(color: AppColors.danger),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                          label: Text(
+                            'Hapus',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),

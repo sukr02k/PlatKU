@@ -99,4 +99,40 @@ class VehicleRepository {
       // Ignore odometer sync errors silently
     }
   }
+
+  /// Recalculates the vehicle's odometer from the highest remaining fuel or
+  /// service log entry when a log is updated or deleted.
+  Future<void> recalculateOdometer(int vehicleId) async {
+    try {
+      final db = await _dbHelper.database;
+      final fuelMaxRows = await db.rawQuery(
+        'SELECT MAX(odometer) AS max_odo FROM fuel_logs WHERE vehicle_id = ?',
+        [vehicleId],
+      );
+      final serviceMaxRows = await db.rawQuery(
+        'SELECT MAX(odometer) AS max_odo FROM service_logs WHERE vehicle_id = ? AND odometer IS NOT NULL',
+        [vehicleId],
+      );
+
+      final fuelMax =
+          (fuelMaxRows.firstOrNull?['max_odo'] as num?)?.toDouble() ?? 0.0;
+      final serviceMax =
+          (serviceMaxRows.firstOrNull?['max_odo'] as num?)?.toDouble() ?? 0.0;
+      final highestLogged = fuelMax > serviceMax ? fuelMax : serviceMax;
+
+      if (highestLogged > 0) {
+        await db.update(
+          'vehicles',
+          {
+            'initial_odometer': highestLogged,
+            'updated_at': DateTime.now().toIso8601String(),
+          },
+          where: 'id = ?',
+          whereArgs: [vehicleId],
+        );
+      }
+    } catch (_) {
+      // Ignore odometer recalculation errors silently
+    }
+  }
 }

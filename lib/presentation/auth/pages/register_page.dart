@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_kendaraanku_app/core/components/motovault_logo.dart';
 import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
 import 'package:flutter_kendaraanku_app/data/local/auth_local_datasource.dart';
 import 'package:flutter_kendaraanku_app/data/repositories/auth_repository.dart';
@@ -272,6 +273,7 @@ class _RegisterPageState extends State<RegisterPage> {
       child: SafeArea(
         bottom: false,
         child: Stack(
+          alignment: Alignment.center,
           children: [
             Positioned(
               top: -20,
@@ -297,68 +299,61 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
-              child: Column(
-                children: [
-                  if (Navigator.canPop(context))
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.18),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.arrow_back_ios_new_rounded,
-                            size: 16,
-                            color: Colors.white,
+            SizedBox(
+              width: double.infinity,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    if (Navigator.canPop(context))
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.18),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.arrow_back_ios_new_rounded,
+                              size: 16,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
+                      )
+                    else
+                      const SizedBox(height: 20),
+                    const SizedBox(height: 12),
+                    const MotoVaultLogo(size: 68),
+                    const SizedBox(height: 14),
+                    Text(
+                      'Buat Akun Baru',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: -0.44,
                       ),
-                    )
-                  else
-                    const SizedBox(height: 40),
-                  const SizedBox(height: 16),
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(20),
                     ),
-                    child: const Icon(
-                      Icons.person_add_rounded,
-                      size: 30,
-                      color: Colors.white,
+                    const SizedBox(height: 6),
+                    Text(
+                      'Daftar untuk mulai mengelola\ngarasi digital Anda di MotoVault',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.white.withValues(alpha: 0.85),
+                        height: 1.4,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    'Buat Akun Baru',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      letterSpacing: -0.44,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Daftar untuk mulai mengelola\nkendaraan Anda',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.white.withValues(alpha: 0.8),
-                      height: 1.4,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],

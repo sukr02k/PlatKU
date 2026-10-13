@@ -1,3 +1,4 @@
+import 'package:flutter_kendaraanku_app/core/utils/password_hasher.dart';
 import 'package:flutter_kendaraanku_app/data/database_helper.dart';
 import 'package:flutter_kendaraanku_app/data/local/auth_local_datasource.dart';
 
@@ -6,12 +7,35 @@ class DemoDataSeeder {
   static const String demoName = 'Abdan Syakuro';
   static const String demoPassword = 'motovault123';
 
+  /// Deletes all vehicles, fuel logs, service logs, and documents for [userId].
+  static Future<void> clearUserGarage(int userId) async {
+    final db = await DatabaseHelper.getInstance().database;
+    final existingVehicles = await db.query(
+      'vehicles',
+      columns: ['id'],
+      where: 'user_id = ?',
+      whereArgs: [userId],
+    );
+    for (final v in existingVehicles) {
+      final vId = v['id'] as int;
+      await db.delete('fuel_logs', where: 'vehicle_id = ?', whereArgs: [vId]);
+      await db.delete('service_logs', where: 'vehicle_id = ?', whereArgs: [vId]);
+      await db.delete(
+        'vehicle_documents',
+        where: 'vehicle_id = ?',
+        whereArgs: [vId],
+      );
+    }
+    await db.delete('vehicles', where: 'user_id = ?', whereArgs: [userId]);
+  }
+
   /// Seeds demo user + vehicles + fuel logs + service logs + documents,
   /// logs the user in, and returns the userId.
   static Future<int> seedAndLogin({int? targetUserId}) async {
     final db = await DatabaseHelper.getInstance().database;
     final now = DateTime.now();
     final nowIso = now.toIso8601String();
+    final hashedDemoPassword = PasswordHasher.hash(demoPassword);
 
     int userId;
     String userName = demoName;
@@ -37,11 +61,20 @@ class DemoDataSeeder {
       if (existing.isNotEmpty) {
         userId = existing.first['id'] as int;
         userName = existing.first['name'] as String;
+        final storedPwd = existing.first['password'] as String? ?? '';
+        if (!PasswordHasher.isHashed(storedPwd)) {
+          await db.update(
+            'users',
+            {'password': hashedDemoPassword, 'updated_at': nowIso},
+            where: 'id = ?',
+            whereArgs: [userId],
+          );
+        }
       } else {
         userId = await db.insert('users', {
           'name': demoName,
           'email': demoEmail,
-          'password': demoPassword,
+          'password': hashedDemoPassword,
           'created_at': nowIso,
           'updated_at': nowIso,
         });
@@ -49,19 +82,7 @@ class DemoDataSeeder {
     }
 
     // Remove existing data for this user to ensure clean, idempotent demo seeding
-    final existingVehicles = await db.query(
-      'vehicles',
-      columns: ['id'],
-      where: 'user_id = ?',
-      whereArgs: [userId],
-    );
-    for (final v in existingVehicles) {
-      final vId = v['id'] as int;
-      await db.delete('fuel_logs', where: 'vehicle_id = ?', whereArgs: [vId]);
-      await db.delete('service_logs', where: 'vehicle_id = ?', whereArgs: [vId]);
-      await db.delete('vehicle_documents', where: 'vehicle_id = ?', whereArgs: [vId]);
-    }
-    await db.delete('vehicles', where: 'user_id = ?', whereArgs: [userId]);
+    await clearUserGarage(userId);
 
     // 1. Insert Vehicle 1: Honda Vario 160 ABS
     final varioId = await db.insert('vehicles', {

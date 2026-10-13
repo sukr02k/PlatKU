@@ -52,7 +52,7 @@ class _DocsPageState extends State<DocsPage> {
   @override
   Widget build(BuildContext context) {
     if (_bootstrapping) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: AppColors.bg,
         body: Center(
           child: CircularProgressIndicator(color: AppColors.primary),
@@ -61,7 +61,7 @@ class _DocsPageState extends State<DocsPage> {
     }
 
     if (_userId == null) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: AppColors.bg,
         body: SafeArea(child: _NoUserView()),
       );
@@ -347,7 +347,7 @@ class _DocsContentState extends State<_DocsContent> {
                     hintText: 'Cari dokumen...',
                     hintStyle: GoogleFonts.plusJakartaSans(
                         fontSize: 14, color: AppColors.textMuted),
-                    prefixIcon: const Icon(Icons.search,
+                    prefixIcon: Icon(Icons.search,
                         size: 20, color: AppColors.textMuted),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(vertical: 10),
@@ -370,7 +370,7 @@ class _DocsContentState extends State<_DocsContent> {
                   border: Border.all(color: AppColors.border),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.close,
+                child: Icon(Icons.close,
                     size: 20, color: AppColors.text),
               ),
             ),
@@ -417,7 +417,7 @@ class _DocsContentState extends State<_DocsContent> {
                   border: Border.all(color: AppColors.border),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.search,
+                child: Icon(Icons.search,
                     size: 20, color: AppColors.text),
               ),
             ),
@@ -498,6 +498,52 @@ class _DocsContentState extends State<_DocsContent> {
           return _DocCard(
             doc: doc,
             vehicleName: _vehicleName(doc.vehicleId),
+            onEdit: () async {
+              final bloc = context.read<VehicleDocumentBloc>();
+              await Navigator.of(context).push<bool>(
+                MaterialPageRoute(
+                  builder: (_) => BlocProvider.value(
+                    value: bloc,
+                    child: AddDocumentPage(
+                      userId: widget.userId,
+                      vehicles: widget.vehicles,
+                      initialDoc: doc,
+                    ),
+                  ),
+                ),
+              );
+            },
+            onRenewOneYear: doc.expiryDate != null
+                ? () {
+                    final oldExpiry = doc.expiryDate!;
+                    final now = DateTime.now();
+                    final baseYear =
+                        oldExpiry.year < now.year ? now.year : oldExpiry.year;
+                    final nextExpiry = DateTime(
+                      baseYear + 1,
+                      oldExpiry.month,
+                      oldExpiry.day,
+                    );
+                    final updated = doc.copyWith(
+                      expiryDate: nextExpiry,
+                      updatedAt: now,
+                    );
+                    context
+                        .read<VehicleDocumentBloc>()
+                        .add(UpdateDocument(updated, widget.userId));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          '${doc.documentType} diperpanjang sampai ${DateFormat('dd MMM yyyy', 'id_ID').format(nextExpiry)}',
+                          style: GoogleFonts.plusJakartaSans(
+                            color: Colors.white,
+                          ),
+                        ),
+                        backgroundColor: AppColors.success,
+                      ),
+                    );
+                  }
+                : null,
             onDelete: () {
               context
                   .read<VehicleDocumentBloc>()
@@ -514,11 +560,15 @@ class _DocsContentState extends State<_DocsContent> {
 class _DocCard extends StatelessWidget {
   final VehicleDocumentModel doc;
   final String vehicleName;
+  final VoidCallback onEdit;
+  final VoidCallback? onRenewOneYear;
   final VoidCallback onDelete;
 
   const _DocCard({
     required this.doc,
     required this.vehicleName,
+    required this.onEdit,
+    this.onRenewOneYear,
     required this.onDelete,
   });
 
@@ -534,6 +584,8 @@ class _DocCard extends StatelessWidget {
         tintBuilder: _tintForType,
         statusLabel: _statusLabel(),
         statusColor: _statusColor(),
+        onEdit: onEdit,
+        onRenewOneYear: onRenewOneYear,
         onDelete: onDelete,
       ),
     );
@@ -639,7 +691,7 @@ class _DocCard extends StatelessWidget {
                       color: AppColors.tintBlueBg,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(Icons.camera_alt,
+                    child: Icon(Icons.camera_alt,
                         size: 14, color: AppColors.tintBlueFg),
                   ),
               ],
@@ -676,7 +728,7 @@ class _DocCard extends StatelessWidget {
             const Spacer(),
             Container(
               padding: const EdgeInsets.only(top: 10),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border(
                   top: BorderSide(color: AppColors.divider, width: 1),
                 ),
@@ -1018,6 +1070,8 @@ class VehicleDocumentDetailSheet extends StatelessWidget {
   final (Color, Color) Function(String) tintBuilder;
   final String statusLabel;
   final Color statusColor;
+  final VoidCallback onEdit;
+  final VoidCallback? onRenewOneYear;
   final VoidCallback onDelete;
 
   const VehicleDocumentDetailSheet({
@@ -1028,6 +1082,8 @@ class VehicleDocumentDetailSheet extends StatelessWidget {
     required this.tintBuilder,
     required this.statusLabel,
     required this.statusColor,
+    required this.onEdit,
+    this.onRenewOneYear,
     required this.onDelete,
   });
 
@@ -1037,9 +1093,9 @@ class VehicleDocumentDetailSheet extends StatelessWidget {
     final df = DateFormat('dd MMMM yyyy', 'id_ID');
 
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: SafeArea(
         top: false,
@@ -1127,32 +1183,74 @@ class VehicleDocumentDetailSheet extends StatelessWidget {
                     border: Border.all(
                         color: AppColors.primarySoft, width: 1.5),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
                     children: [
-                      Text(
-                        doc.isPermanent
-                            ? 'BERLAKU SEUMUR HIDUP'
-                            : 'BERLAKU SAMPAI',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
-                          letterSpacing: 0.4,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              doc.isPermanent
+                                  ? 'BERLAKU SEUMUR HIDUP'
+                                  : 'BERLAKU SAMPAI',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primary,
+                                letterSpacing: 0.4,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              doc.expiryDate != null
+                                  ? df.format(doc.expiryDate!)
+                                  : 'Permanen',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 19,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.primary,
+                                letterSpacing: -0.4,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        doc.expiryDate != null
-                            ? df.format(doc.expiryDate!)
-                            : 'Permanen',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.primary,
-                          letterSpacing: -0.4,
+                      if (onRenewOneYear != null)
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
+                            onRenewOneYear!();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.autorenew_rounded,
+                                  size: 15,
+                                  color: Colors.white,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '+1 Tahun',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),
@@ -1210,27 +1308,60 @@ class VehicleDocumentDetailSheet extends StatelessWidget {
                   ),
                 ],
                 const SizedBox(height: 18),
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: OutlinedButton.icon(
-                    onPressed: () => _confirmDelete(context),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.danger,
-                      side: const BorderSide(color: AppColors.danger),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 48,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            onEdit();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          icon: const Icon(Icons.edit_outlined, size: 18),
+                          label: Text(
+                            'Edit',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                    icon: const Icon(Icons.delete_outline_rounded, size: 18),
-                    label: Text(
-                      'Hapus Dokumen',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: SizedBox(
+                        height: 48,
+                        child: OutlinedButton.icon(
+                          onPressed: () => _confirmDelete(context),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.danger,
+                            side: const BorderSide(color: AppColors.danger),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                          label: Text(
+                            'Hapus',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),

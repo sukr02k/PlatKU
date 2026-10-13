@@ -136,7 +136,7 @@ class PrivacyPage extends StatelessWidget {
             title: 'Tidak Ada Server',
             subtitle: 'Semua data tersimpan di perangkat Anda',
           ),
-          const Divider(height: 18, color: AppColors.divider),
+          Divider(height: 18, color: AppColors.divider),
           _highlightRow(
             icon: Icons.analytics_outlined,
             tintBg: AppColors.tintRoseBg,
@@ -144,7 +144,7 @@ class PrivacyPage extends StatelessWidget {
             title: 'Tanpa Analytics',
             subtitle: 'Tidak ada pelacakan aktivitas pengguna',
           ),
-          const Divider(height: 18, color: AppColors.divider),
+          Divider(height: 18, color: AppColors.divider),
           _highlightRow(
             icon: Icons.lock_outline_rounded,
             tintBg: AppColors.tintBlueBg,
@@ -364,7 +364,7 @@ class PrivacyPage extends StatelessWidget {
     ),
   ];
 
-  static const List<_Permission> _permissions = [
+  static List<_Permission> get _permissions => [
     _Permission(
       icon: Icons.camera_alt_outlined,
       tintBg: AppColors.tintBlueBg,

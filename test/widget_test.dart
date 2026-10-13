@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_kendaraanku_app/core/constants/strings.dart';
 import 'package:flutter_kendaraanku_app/core/theme_controller.dart';
 import 'package:flutter_kendaraanku_app/core/utils/formatters.dart';
+import 'package:flutter_kendaraanku_app/core/utils/password_hasher.dart';
 import 'package:flutter_kendaraanku_app/core/utils/receipt_parser.dart';
 import 'package:flutter_kendaraanku_app/data/models/vehicle_document_model.dart';
 
@@ -34,6 +35,20 @@ void main() {
       await ThemeController.instance.setThemeById('system');
       expect(ThemeController.instance.value, ThemeMode.system);
       expect(ThemeController.instance.currentId, 'system');
+    });
+  });
+
+  group('PasswordHasher Security Utilities', () {
+    test('Hashes plain password with salted SHA-256 and verifies accurately', () {
+      final hashed = PasswordHasher.hash('rahasia123');
+      expect(PasswordHasher.isHashed(hashed), isTrue);
+      expect(hashed, isNot('rahasia123'));
+      expect(PasswordHasher.verify('rahasia123', hashed), isTrue);
+      expect(PasswordHasher.verify('salah123', hashed), isFalse);
+      // Idempotent if called again on already-hashed string
+      expect(PasswordHasher.hash(hashed), equals(hashed));
+      // Backward compatible with legacy plain text
+      expect(PasswordHasher.verify('legacyPass', 'legacyPass'), isTrue);
     });
   });
 

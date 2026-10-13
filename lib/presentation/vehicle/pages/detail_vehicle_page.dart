@@ -519,7 +519,7 @@ class _SpesifikasiCard extends StatelessWidget {
                   ),
                 ),
                 if (index < specs.length - 1)
-                  const Divider(color: AppColors.divider, height: 1),
+                  Divider(color: AppColors.divider, height: 1),
               ],
             );
           }),
@@ -689,7 +689,7 @@ class _ServisTab extends StatelessWidget {
                       color: AppColors.tintMintBg,
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.build_rounded,
                       color: AppColors.tintMintFg,
                       size: 28,
@@ -734,7 +734,7 @@ class _ServisTab extends StatelessWidget {
                           color: AppColors.tintMintBg,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.build_rounded,
                           size: 20,
                           color: AppColors.tintMintFg,
@@ -903,7 +903,7 @@ class _DokumenTab extends StatelessWidget {
                         color: AppColors.tintLavenderBg,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.folder_rounded,
                         size: 20,
                         color: AppColors.tintLavenderFg,
@@ -1094,7 +1094,7 @@ class _DocPhotoCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 6),
-              const Icon(
+              Icon(
                 Icons.camera_alt,
                 size: 14,
                 color: AppColors.tintBlueFg,

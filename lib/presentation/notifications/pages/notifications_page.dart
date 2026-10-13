@@ -34,17 +34,34 @@ class NotificationsPage extends StatelessWidget {
     for (final v in vehicles) {
       final serviceResult = await serviceRepo.getByVehicle(v.id!);
       serviceResult.fold((l) => null, (logs) {
-        for (final log in logs) {
-          if (log.nextServiceDate != null &&
-              !log.nextServiceDate!.isBefore(today)) {
-            reminders.add(_ReminderNotif(
-              kind: _ReminderKind.service,
-              title: log.description,
-              vehicleName: v.name,
-              dueDate: log.nextServiceDate!,
-              daysUntil:
-                  log.nextServiceDate!.difference(today).inDays,
-            ));
+        final seenTypes = <String>{};
+        final sortedLogs = List.of(logs)
+          ..sort((a, b) => b.date.compareTo(a.date));
+        for (final log in sortedLogs) {
+          if ((log.nextServiceDate != null ||
+                  log.nextServiceOdometer != null) &&
+              !seenTypes.contains(log.serviceType)) {
+            final effectiveDate =
+                log.nextServiceDate ?? log.date.add(const Duration(days: 90));
+            final dueDay = DateTime(
+              effectiveDate.year,
+              effectiveDate.month,
+              effectiveDate.day,
+            );
+            final daysUntil = dueDay.difference(today).inDays;
+            if (daysUntil >= -30) {
+              seenTypes.add(log.serviceType);
+              final odoSuffix = log.nextServiceOdometer != null
+                  ? ' · Target ${Formatters.thousands(log.nextServiceOdometer!.round())} km'
+                  : '';
+              reminders.add(_ReminderNotif(
+                kind: _ReminderKind.service,
+                title: log.description,
+                vehicleName: '${v.name}$odoSuffix',
+                dueDate: effectiveDate,
+                daysUntil: daysUntil,
+              ));
+            }
           }
           activities.add(_ActivityNotif(
             type: 'service',
@@ -167,7 +184,7 @@ class NotificationsPage extends StatelessWidget {
                 border: Border.all(color: AppColors.border),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.arrow_back_ios_new,
                 size: 16,
                 color: AppColors.text,

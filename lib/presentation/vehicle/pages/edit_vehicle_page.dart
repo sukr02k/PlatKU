@@ -151,7 +151,7 @@ class _EditVehiclePageState extends State<EditVehiclePage> {
       child: Row(
         children: [
           AppIconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 16, color: AppColors.text),
+            icon: Icon(Icons.arrow_back_ios_new, size: 16, color: AppColors.text),
             onTap: () => Navigator.pop(context),
           ),
           const SizedBox(width: 12),
@@ -440,7 +440,7 @@ class _EditVehiclePageState extends State<EditVehiclePage> {
           key: ValueKey(_selectedBrand),
           initialValue: _selectedBrand,
           isExpanded: true,
-          icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 20, color: AppColors.textMuted),
+          icon: Icon(Icons.keyboard_arrow_down_rounded, size: 20, color: AppColors.textMuted),
           validator: (v) => (v == null || v.isEmpty) ? 'Wajib diisi' : null,
           style: GoogleFonts.plusJakartaSans(
             fontSize: 14,
@@ -454,7 +454,7 @@ class _EditVehiclePageState extends State<EditVehiclePage> {
               fontWeight: FontWeight.w500,
               color: AppColors.textSoft,
             ),
-            prefixIcon: const Padding(
+            prefixIcon: Padding(
               padding: EdgeInsets.only(left: 14, right: 10),
               child: Icon(Icons.business, size: 18, color: AppColors.textMuted),
             ),

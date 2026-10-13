@@ -221,7 +221,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(Icons.star,
+                                    Icon(Icons.star,
                                         size: 12,
                                         color: AppColors.tintAmberFg),
                                     const SizedBox(width: 4),
@@ -245,7 +245,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     Container(
                       margin: const EdgeInsets.only(top: 16),
                       padding: const EdgeInsets.only(top: 16),
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         border: Border(
                           top: BorderSide(color: AppColors.divider, width: 1),
                         ),
@@ -322,7 +322,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     children: [
                       _buildSettingsRowWidget(row),
                       if (!isLast)
-                        const Padding(
+                        Padding(
                           padding: EdgeInsets.only(left: 60),
                           child:
                               Divider(height: 1, color: AppColors.divider),
@@ -382,7 +382,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right,
+            Icon(Icons.chevron_right,
                 size: 20, color: AppColors.textSoft),
           ],
         ),
@@ -486,7 +486,77 @@ class _ProfilePageState extends State<ProfilePage> {
           );
         },
       ),
+      _SettingsRow(
+        tintBg: AppColors.tintRoseBg,
+        tintFg: AppColors.tintRoseFg,
+        icon: Icons.delete_sweep_outlined,
+        title: 'Reset / Kosongkan Garasi',
+        subtitle: 'Hapus seluruh data kendaraan, BBM, servis & dokumen',
+        onTap: _confirmResetGarage,
+      ),
     ];
+  }
+
+  Future<void> _confirmResetGarage() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Text(
+          'Kosongkan Garasi?',
+          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+        ),
+        content: Text(
+          'Seluruh data kendaraan, catatan BBM, riwayat servis, dan dokumen pada akun ini akan dihapus permanen agar Anda bisa mulai dari awal.',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 13,
+            color: AppColors.textMuted,
+            height: 1.45,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              'Batal',
+              style: GoogleFonts.plusJakartaSans(
+                color: AppColors.textSoft,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              'Ya, Kosongkan',
+              style: GoogleFonts.plusJakartaSans(
+                color: AppColors.danger,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true || !mounted) return;
+    final vehicleBloc = context.read<VehicleBloc>();
+    final messenger = ScaffoldMessenger.of(context);
+    final userId = await AuthLocalDatasource().getUserId();
+    if (userId == null) return;
+
+    await DemoDataSeeder.clearUserGarage(userId);
+    if (!mounted) return;
+    vehicleBloc.add(LoadVehicles(userId));
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          'Garasi berhasil dikosongkan.',
+          style: GoogleFonts.plusJakartaSans(color: Colors.white),
+        ),
+        backgroundColor: AppColors.danger,
+      ),
+    );
   }
 
   List<_SettingsRow> _otherRows() {
@@ -533,7 +603,7 @@ class _ProfilePageState extends State<ProfilePage> {
         tintFg: AppColors.tintAmberFg,
         icon: Icons.info_outline,
         title: 'Tentang Aplikasi',
-        subtitle: 'Versi 1.0.0',
+        subtitle: 'Versi 1.1.0',
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const AboutPage()),
@@ -558,7 +628,7 @@ class _ProfilePageState extends State<ProfilePage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
                 5,
-                (i) => const Icon(Icons.star,
+                (i) => Icon(Icons.star,
                     color: AppColors.tintAmberFg, size: 36),
               ),
             ),
@@ -677,7 +747,7 @@ class _ProfilePageState extends State<ProfilePage> {
         padding: const EdgeInsets.only(bottom: 14),
         child: Center(
           child: Text(
-            'MotoVault v1.0.0',
+            'MotoVault v1.1.0',
             style: GoogleFonts.plusJakartaSans(
               fontSize: 11,
               color: AppColors.textSoft,

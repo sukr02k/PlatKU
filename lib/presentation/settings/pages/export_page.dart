@@ -246,7 +246,7 @@ class _ExportPageState extends State<ExportPage> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.check_circle_rounded,
+                            Icon(Icons.check_circle_rounded,
                                 size: 18, color: AppColors.tintMintFg),
                             const SizedBox(width: 10),
                             Expanded(
@@ -365,7 +365,7 @@ class _ExportPageState extends State<ExportPage> {
               color: AppColors.tintBlueBg,
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.directions_car_outlined,
               size: 22,
               color: AppColors.tintBlueFg,

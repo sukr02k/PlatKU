@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_kendaraanku_app/core/components/motovault_logo.dart';
 import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
 import 'package:flutter_kendaraanku_app/presentation/profile/pages/privacy_page.dart';
 import 'package:flutter_kendaraanku_app/presentation/profile/pages/terms_page.dart';
@@ -83,23 +84,13 @@ class AboutPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Container(
-            width: 76,
-            height: 76,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(22),
-            ),
-            child: const Icon(
-              Icons.shield_rounded,
-              size: 40,
-              color: Colors.white,
-            ),
-          ),
+          const MotoVaultLogo(size: 80),
           const SizedBox(height: 14),
           Text(
             'MotoVault',
+            textAlign: TextAlign.center,
             style: GoogleFonts.plusJakartaSans(
               fontSize: 20,
               fontWeight: FontWeight.w800,
@@ -108,7 +99,8 @@ class AboutPage extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            'Versi 1.0.0 · Smart Vehicle & Garage Ledger',
+            'Versi 1.1.0 · Smart Vehicle & Garage Ledger',
+            textAlign: TextAlign.center,
             style: GoogleFonts.plusJakartaSans(
               fontSize: 12,
               color: Colors.white.withValues(alpha: 0.85),
@@ -255,7 +247,7 @@ class AboutPage extends StatelessWidget {
                 ),
               ),
             ),
-            const Icon(Icons.chevron_right,
+            Icon(Icons.chevron_right,
                 size: 20, color: AppColors.textSoft),
           ],
         ),
@@ -286,7 +278,7 @@ class AboutPage extends StatelessWidget {
     );
   }
 
-  static const List<_Feature> _features = [
+  static List<_Feature> get _features => [
     _Feature(
       icon: Icons.directions_car_rounded,
       tintBg: AppColors.tintBlueBg,

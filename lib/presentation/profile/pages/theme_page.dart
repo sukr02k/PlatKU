@@ -14,7 +14,7 @@ class _ThemePageState extends State<ThemePage> {
   String _selected = 'light';
   bool _loading = true;
 
-  static const _themes = [
+  static List<_ThemeOption> get _themes => [
     _ThemeOption(
       id: 'light',
       label: 'Terang',

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_kendaraanku_app/core/components/motovault_logo.dart';
 import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
 import 'package:flutter_kendaraanku_app/data/local/auth_local_datasource.dart';
 import 'package:flutter_kendaraanku_app/data/local/demo_data_seeder.dart';
@@ -151,9 +152,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 28),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         // Illustration card
                         Container(
+                          width: double.infinity,
                           constraints: const BoxConstraints(maxWidth: 320),
                           height: 260,
                           decoration: BoxDecoration(
@@ -165,11 +168,16 @@ class _OnboardingPageState extends State<OnboardingPage> {
                             borderRadius: BorderRadius.circular(32),
                           ),
                           child: Center(
-                            child: Icon(
-                              page.icon,
-                              size: 80,
-                              color: Colors.white.withValues(alpha: 0.9),
-                            ),
+                            child: index == 0
+                                ? const MotoVaultLogo(
+                                    size: 112,
+                                    showContainer: false,
+                                  )
+                                : Icon(
+                                    page.icon,
+                                    size: 80,
+                                    color: Colors.white.withValues(alpha: 0.9),
+                                  ),
                           ),
                         ),
                         const SizedBox(height: 36),
@@ -236,7 +244,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                             onPressed: _goToPrev,
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppColors.text,
-                              side: const BorderSide(color: AppColors.border),
+                              side: BorderSide(color: AppColors.border),
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),

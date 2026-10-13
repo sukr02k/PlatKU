@@ -7,6 +7,13 @@ class ThemeController extends ValueNotifier<ThemeMode> {
 
   ThemeController._() : super(ThemeMode.light);
 
+  bool get isDark {
+    if (value == ThemeMode.dark) return true;
+    if (value == ThemeMode.light) return false;
+    return WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+        Brightness.dark;
+  }
+
   String get currentId {
     switch (value) {
       case ThemeMode.dark:

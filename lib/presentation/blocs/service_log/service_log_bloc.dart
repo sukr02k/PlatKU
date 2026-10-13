@@ -57,6 +57,7 @@ class ServiceLogBloc extends Bloc<ServiceLogEvent, ServiceLogState> {
     await result.fold(
       (error) async => emit(ServiceLogError(error)),
       (_) async {
+        await _vehicleRepository.recalculateOdometer(event.serviceLog.vehicleId);
         await _vehicleRepository.syncOdometerIfHigher(
           event.serviceLog.vehicleId,
           event.serviceLog.odometer,
@@ -76,6 +77,7 @@ class ServiceLogBloc extends Bloc<ServiceLogEvent, ServiceLogState> {
     await result.fold(
       (error) async => emit(ServiceLogError(error)),
       (_) async {
+        await _vehicleRepository.recalculateOdometer(event.vehicleId);
         await _notifier.cancelServiceReminder(event.id);
         add(LoadServiceLogs(event.vehicleId));
       },
@@ -83,7 +85,10 @@ class ServiceLogBloc extends Bloc<ServiceLogEvent, ServiceLogState> {
   }
 
   Future<void> _scheduleFor(ServiceLogModel log, int id) async {
-    final nextDate = log.nextServiceDate;
+    final nextDate = log.nextServiceDate ??
+        (log.nextServiceOdometer != null
+            ? log.date.add(const Duration(days: 90))
+            : null);
     if (nextDate == null) return;
     final vResult = await _vehicleRepository.getById(log.vehicleId);
     final vehicleName = vResult.fold((_) => 'Kendaraan Anda', (v) => v.name);

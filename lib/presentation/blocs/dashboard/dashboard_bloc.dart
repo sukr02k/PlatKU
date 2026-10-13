@@ -156,14 +156,37 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     final reminders = <ReminderItem>[];
     final today = DateTime(now.year, now.month, now.day);
 
-    for (final log in serviceLogs) {
-      if (log.nextServiceDate != null && !log.nextServiceDate!.isBefore(today)) {
-        final daysUntil = log.nextServiceDate!.difference(today).inDays;
+    // Track seen service types so we only show the latest active reminder per service type
+    final seenServiceTypes = <String>{};
+    final sortedServices = List<ServiceLogModel>.from(serviceLogs)
+      ..sort((a, b) => b.date.compareTo(a.date));
+
+    for (final log in sortedServices) {
+      if (log.nextServiceDate == null && log.nextServiceOdometer == null) {
+        continue;
+      }
+      if (seenServiceTypes.contains(log.serviceType)) continue;
+
+      final effectiveDueDate =
+          log.nextServiceDate ?? log.date.add(const Duration(days: 90));
+      final dueDay = DateTime(
+        effectiveDueDate.year,
+        effectiveDueDate.month,
+        effectiveDueDate.day,
+      );
+      final daysUntil = dueDay.difference(today).inDays;
+
+      // Show if upcoming or overdue within last 30 days
+      if (daysUntil >= -30) {
+        seenServiceTypes.add(log.serviceType);
+        final odoText = log.nextServiceOdometer != null
+            ? ' · Target ${Formatters.thousands(log.nextServiceOdometer!.round())} km'
+            : '';
         reminders.add(ReminderItem(
           kind: 'service',
           title: log.description,
-          subtitle: log.serviceType,
-          dueDate: log.nextServiceDate!,
+          subtitle: '${log.serviceType}$odoText',
+          dueDate: effectiveDueDate,
           daysUntil: daysUntil,
           nextOdometer: log.nextServiceOdometer,
         ));
@@ -172,14 +195,19 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
 
     for (final d in docs) {
       if (d.expiryDate == null) continue;
-      final daysUntil = d.expiryDate!.difference(today).inDays;
-      if (daysUntil >= -7 && daysUntil <= 60) {
+      final expDay = DateTime(
+        d.expiryDate!.year,
+        d.expiryDate!.month,
+        d.expiryDate!.day,
+      );
+      final daysUntil = expDay.difference(today).inDays;
+      if (daysUntil >= -30 && daysUntil <= 60) {
         reminders.add(ReminderItem(
           kind: 'document',
           title: 'Perpanjang ${d.documentType}',
           subtitle: d.documentNumber ?? 'Dokumen Kendaraan',
           dueDate: d.expiryDate!,
-          daysUntil: daysUntil < 0 ? 0 : daysUntil,
+          daysUntil: daysUntil,
         ));
       }
     }

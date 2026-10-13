@@ -8,6 +8,7 @@ import 'package:flutter_kendaraanku_app/core/components/app_icon_button.dart';
 import 'package:flutter_kendaraanku_app/core/utils/formatters.dart';
 import 'package:flutter_kendaraanku_app/core/utils/receipt_parser.dart';
 import 'package:flutter_kendaraanku_app/data/models/service_log_model.dart';
+import 'package:flutter_kendaraanku_app/data/repositories/vehicle_repository.dart';
 import 'package:flutter_kendaraanku_app/presentation/blocs/service_log/service_log_bloc.dart';
 import 'package:flutter_kendaraanku_app/presentation/blocs/service_log/service_log_event.dart';
 import 'package:flutter_kendaraanku_app/presentation/scan/pages/scan_receipt_page.dart';
@@ -15,10 +16,12 @@ import 'package:intl/intl.dart';
 
 class AddServiceLogPage extends StatefulWidget {
   final int vehicleId;
+  final ServiceLogModel? initialLog;
 
   const AddServiceLogPage({
     super.key,
     required this.vehicleId,
+    this.initialLog,
   });
 
   @override
@@ -39,6 +42,7 @@ class _AddServiceLogPageState extends State<AddServiceLogPage> {
   DateTime? _nextServiceDate;
   int _selectedCategory = 0;
   bool _isSaving = false;
+  double _currentOdometer = 0;
   String? _receiptImagePath;
 
   final _serviceCategories = [
@@ -53,6 +57,77 @@ class _AddServiceLogPageState extends State<AddServiceLogPage> {
     'Perpanjang STNK / Pajak',
     'Lain-lain',
   ];
+
+  bool get _isEditMode => widget.initialLog != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialLog;
+    if (initial != null) {
+      _selectedDate = initial.date;
+      _descriptionController.text = initial.description;
+      _costController.text = Formatters.thousands(initial.cost.round());
+      if (initial.odometer != null) {
+        _odometerController.text =
+            Formatters.thousands(initial.odometer!.round());
+      }
+      _workshopController.text = initial.workshopName ?? '';
+      if (initial.nextServiceOdometer != null) {
+        _nextOdometerController.text =
+            Formatters.thousands(initial.nextServiceOdometer!.round());
+      }
+      _nextServiceDate = initial.nextServiceDate;
+      _receiptImagePath = initial.receiptImagePath;
+      _notesController.text = initial.notes ?? '';
+      final catIdx = _serviceCategories.indexOf(initial.serviceType);
+      if (catIdx >= 0) {
+        _selectedCategory = catIdx;
+      } else {
+        _serviceCategories.insert(0, initial.serviceType);
+        _selectedCategory = 0;
+      }
+    }
+    _loadVehicleOdometer();
+  }
+
+  Future<void> _loadVehicleOdometer() async {
+    final res = await VehicleRepository().getById(widget.vehicleId);
+    res.fold((_) => null, (vehicle) {
+      if (mounted) {
+        setState(() => _currentOdometer = vehicle.initialOdometer);
+      }
+    });
+  }
+
+  bool get _isSelectedDateToday {
+    final now = DateTime.now();
+    return _selectedDate.year == now.year &&
+        _selectedDate.month == now.month &&
+        _selectedDate.day == now.day;
+  }
+
+  double get _effectiveBaseOdometer {
+    if (_odometerController.text.trim().isNotEmpty) {
+      final parsed = Formatters.parseFormattedNumber(_odometerController.text);
+      if (parsed > 0) return parsed;
+    }
+    return _currentOdometer;
+  }
+
+  void _applyNextKmPreset(int addKm) {
+    final base = _effectiveBaseOdometer;
+    final target = (base + addKm).round();
+    setState(() {
+      _nextOdometerController.text = Formatters.thousands(target);
+    });
+  }
+
+  void _applyNextDatePreset(int addDays) {
+    setState(() {
+      _nextServiceDate = _selectedDate.add(Duration(days: addDays));
+    });
+  }
 
   @override
   void dispose() {
@@ -74,7 +149,7 @@ class _AddServiceLogPageState extends State<AddServiceLogPage> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
+            colorScheme: ColorScheme.light(
               primary: AppColors.primary,
               onPrimary: Colors.white,
               surface: AppColors.surface,
@@ -99,7 +174,7 @@ class _AddServiceLogPageState extends State<AddServiceLogPage> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
+            colorScheme: ColorScheme.light(
               primary: AppColors.primary,
               onPrimary: Colors.white,
               surface: AppColors.surface,
@@ -121,6 +196,7 @@ class _AddServiceLogPageState extends State<AddServiceLogPage> {
     setState(() => _isSaving = true);
 
     final serviceLog = ServiceLogModel(
+      id: widget.initialLog?.id,
       vehicleId: widget.vehicleId,
       date: _selectedDate,
       odometer: _odometerController.text.trim().isNotEmpty
@@ -140,11 +216,15 @@ class _AddServiceLogPageState extends State<AddServiceLogPage> {
       notes: _notesController.text.trim().isEmpty
           ? null
           : _notesController.text.trim(),
-      createdAt: DateTime.now(),
+      createdAt: widget.initialLog?.createdAt ?? DateTime.now(),
     );
 
     if (mounted) {
-      context.read<ServiceLogBloc>().add(AddServiceLog(serviceLog));
+      if (_isEditMode) {
+        context.read<ServiceLogBloc>().add(UpdateServiceLog(serviceLog));
+      } else {
+        context.read<ServiceLogBloc>().add(AddServiceLog(serviceLog));
+      }
       Navigator.pop(context, true);
     }
   }
@@ -182,14 +262,14 @@ class _AddServiceLogPageState extends State<AddServiceLogPage> {
       child: Row(
         children: [
           AppIconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, size: 16,
+            icon: Icon(Icons.arrow_back_ios_new, size: 16,
                 color: AppColors.text),
             onTap: () => Navigator.pop(context),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Catat Servis',
+              _isEditMode ? 'Edit Catatan Servis' : 'Catat Servis',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -290,7 +370,7 @@ class _AddServiceLogPageState extends State<AddServiceLogPage> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.calendar_today_outlined, size: 18,
+                  Icon(Icons.calendar_today_outlined, size: 18,
                       color: AppColors.textMuted),
                   const SizedBox(width: 10),
                   Text(
@@ -302,7 +382,7 @@ class _AddServiceLogPageState extends State<AddServiceLogPage> {
                     ),
                   ),
                   const Spacer(),
-                  const Icon(Icons.keyboard_arrow_down_rounded, size: 20,
+                  Icon(Icons.keyboard_arrow_down_rounded, size: 20,
                       color: AppColors.textMuted),
                 ],
               ),
@@ -389,8 +469,12 @@ class _AddServiceLogPageState extends State<AddServiceLogPage> {
           // Odometer
           _buildTextField(
             controller: _odometerController,
-            label: 'Odometer (opsional)',
-            hint: 'Contoh: 45.231',
+            label: _currentOdometer > 0
+                ? 'Odometer (opsional) · Saat ini: ${Formatters.thousands(_currentOdometer.round())} km'
+                : 'Odometer (opsional)',
+            hint: _currentOdometer > 0
+                ? 'Min. ${Formatters.thousands(_currentOdometer.round())}'
+                : 'Contoh: 45.231',
             icon: Icons.speed_outlined,
             trailing: 'km',
             keyboardType: TextInputType.number,
@@ -398,6 +482,18 @@ class _AddServiceLogPageState extends State<AddServiceLogPage> {
               FilteringTextInputFormatter.digitsOnly,
               ThousandsSeparatorInputFormatter(),
             ],
+            validator: (v) {
+              if (v == null || v.trim().isEmpty) return null;
+              final val = Formatters.parseFormattedNumber(v);
+              if (val <= 0) return 'Harus lebih dari 0';
+              if (!_isEditMode &&
+                  _isSelectedDateToday &&
+                  _currentOdometer > 0 &&
+                  val < _currentOdometer) {
+                return 'Odometer tidak boleh mundur di bawah ${Formatters.thousands(_currentOdometer.round())} km';
+              }
+              return null;
+            },
           ),
           const SizedBox(height: 14),
 
@@ -434,6 +530,45 @@ class _AddServiceLogPageState extends State<AddServiceLogPage> {
               FilteringTextInputFormatter.digitsOnly,
               ThousandsSeparatorInputFormatter(),
             ],
+            validator: (v) {
+              if (v == null || v.trim().isEmpty) return null;
+              final nextVal = Formatters.parseFormattedNumber(v);
+              final baseVal = _effectiveBaseOdometer;
+              if (baseVal > 0 && nextVal <= baseVal) {
+                return 'Harus lebih besar dari odometer saat ini (${Formatters.thousands(baseVal.round())} km)';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final addKm in const [2000, 4000, 5000, 10000])
+                GestureDetector(
+                  onTap: () => _applyNextKmPreset(addKm),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primarySofter,
+                      borderRadius: BorderRadius.circular(100),
+                      border: Border.all(color: AppColors.primarySoft),
+                    ),
+                    child: Text(
+                      '+${Formatters.thousands(addKm)} km',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 14),
 
@@ -452,7 +587,7 @@ class _AddServiceLogPageState extends State<AddServiceLogPage> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.event_outlined, size: 18,
+                  Icon(Icons.event_outlined, size: 18,
                       color: AppColors.textMuted),
                   const SizedBox(width: 10),
                   Text(
@@ -472,15 +607,50 @@ class _AddServiceLogPageState extends State<AddServiceLogPage> {
                   if (_nextServiceDate != null)
                     GestureDetector(
                       onTap: () => setState(() => _nextServiceDate = null),
-                      child: const Icon(Icons.close_rounded, size: 18,
+                      child: Icon(Icons.close_rounded, size: 18,
                           color: AppColors.textMuted),
                     )
                   else
-                    const Icon(Icons.keyboard_arrow_down_rounded, size: 20,
+                    Icon(Icons.keyboard_arrow_down_rounded, size: 20,
                         color: AppColors.textMuted),
                 ],
               ),
             ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final preset in const [
+                ('1 Bulan', 30),
+                ('2 Bulan', 60),
+                ('3 Bulan', 90),
+                ('6 Bulan', 180),
+              ])
+                GestureDetector(
+                  onTap: () => _applyNextDatePreset(preset.$2),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primarySofter,
+                      borderRadius: BorderRadius.circular(100),
+                      border: Border.all(color: AppColors.primarySoft),
+                    ),
+                    child: Text(
+                      '+${preset.$1}',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 18),
 
@@ -520,7 +690,7 @@ class _AddServiceLogPageState extends State<AddServiceLogPage> {
                   GestureDetector(
                     onTap: () =>
                         setState(() => _receiptImagePath = null),
-                    child: const Icon(Icons.close_rounded,
+                    child: Icon(Icons.close_rounded,
                         size: 20, color: AppColors.textMuted),
                   ),
                 ],
@@ -701,7 +871,7 @@ class _AddServiceLogPageState extends State<AddServiceLogPage> {
                     )
                   else ...[
                     Text(
-                      'Simpan',
+                      _isEditMode ? 'Simpan Perubahan' : 'Simpan',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,

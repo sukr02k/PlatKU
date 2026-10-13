@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
+import 'package:flutter_kendaraanku_app/core/utils/password_hasher.dart';
 import 'package:flutter_kendaraanku_app/data/local/auth_local_datasource.dart';
 import 'package:flutter_kendaraanku_app/data/repositories/auth_repository.dart';
 
@@ -46,11 +47,13 @@ class _SecurityPageState extends State<SecurityPage> {
       await userResult.fold(
         (err) async => _showSnack(err, danger: true),
         (user) async {
-          if (user.password != _currentCtrl.text) {
+          if (!PasswordHasher.verify(_currentCtrl.text, user.password)) {
             _showSnack('Kata sandi saat ini salah', danger: true);
             return;
           }
-          final updated = user.copyWith(password: _newCtrl.text);
+          final updated = user.copyWith(
+            password: PasswordHasher.hash(_newCtrl.text),
+          );
           final r = await repo.updateUser(updated);
           r.fold(
             (err) => _showSnack(err, danger: true),
@@ -310,7 +313,7 @@ class _SecurityPageState extends State<SecurityPage> {
           fontWeight: FontWeight.w600,
           color: AppColors.textMuted,
         ),
-        prefixIcon: const Icon(Icons.lock_outline_rounded,
+        prefixIcon: Icon(Icons.lock_outline_rounded,
             size: 18, color: AppColors.textMuted),
         suffixIcon: IconButton(
           icon: Icon(
@@ -326,11 +329,11 @@ class _SecurityPageState extends State<SecurityPage> {
             const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: AppColors.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

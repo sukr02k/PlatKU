@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_kendaraanku_app/core/components/motovault_logo.dart';
 import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
 import 'package:flutter_kendaraanku_app/core/constants/app_styles.dart';
 import 'package:flutter_kendaraanku_app/core/components/app_card.dart';
@@ -383,7 +384,7 @@ class _HomeHeader extends StatelessWidget {
               Stack(
                 children: [
                   AppIconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.notifications_outlined,
                       size: 22,
                       color: AppColors.textMuted,
@@ -434,6 +435,7 @@ class _EmptyStateWelcome extends StatelessWidget {
               borderRadius: BorderRadius.circular(28),
             ),
             child: Stack(
+              alignment: Alignment.center,
               children: [
                 Positioned(
                   top: -30,
@@ -459,134 +461,129 @@ class _EmptyStateWelcome extends StatelessWidget {
                     ),
                   ),
                 ),
-                Column(
-                  children: [
-                    Container(
-                      width: 72,
-                      height: 72,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.18),
-                        borderRadius: BorderRadius.circular(22),
+                SizedBox(
+                  width: double.infinity,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const MotoVaultLogo(size: 76),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Belum Ada Kendaraan',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.directions_car_rounded,
-                        size: 36,
-                        color: Colors.white,
+                      const SizedBox(height: 8),
+                      Text(
+                        'Tambahkan kendaraan pertamamu\natau muat data demo untuk eksplorasi instan',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.white.withValues(alpha: 0.85),
+                          height: 1.5,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'Belum Ada Kendaraan',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Tambahkan kendaraan pertamamu\natau muat data demo untuk eksplorasi instan',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.white.withValues(alpha: 0.8),
-                        height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Builder(
-                      builder: (ctx) {
-                        return Column(
-                          children: [
-                            GestureDetector(
-                              onTap: () {
-                                final bloc = ctx.read<VehicleBloc>();
-                                Navigator.push(
-                                  ctx,
-                                  MaterialPageRoute(
-                                    builder: (_) => BlocProvider.value(
-                                      value: bloc,
-                                      child: const AddVehiclePage(),
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 28, vertical: 14),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(14),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color:
-                                          Colors.black.withValues(alpha: 0.1),
-                                      blurRadius: 12,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.add_rounded,
-                                        size: 18, color: AppColors.primary),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Tambah Kendaraan',
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.primary,
+                      const SizedBox(height: 24),
+                      Builder(
+                        builder: (ctx) {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  final bloc = ctx.read<VehicleBloc>();
+                                  Navigator.push(
+                                    ctx,
+                                    MaterialPageRoute(
+                                      builder: (_) => BlocProvider.value(
+                                        value: bloc,
+                                        child: const AddVehiclePage(),
                                       ),
                                     ),
-                                  ],
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 28, vertical: 14),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(14),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black
+                                            .withValues(alpha: 0.1),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.add_rounded,
+                                          size: 18, color: AppColors.primary),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Tambah Kendaraan',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(height: 10),
-                            GestureDetector(
-                              onTap: () async {
-                                final bloc = ctx.read<VehicleBloc>();
-                                final userId =
-                                    await DemoDataSeeder.seedAndLogin();
-                                bloc.add(LoadVehicles(userId));
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 18, vertical: 10),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.16),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
+                              const SizedBox(height: 10),
+                              GestureDetector(
+                                onTap: () async {
+                                  final bloc = ctx.read<VehicleBloc>();
+                                  final userId =
+                                      await DemoDataSeeder.seedAndLogin();
+                                  bloc.add(LoadVehicles(userId));
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 18, vertical: 10),
+                                  decoration: BoxDecoration(
                                     color:
-                                        Colors.white.withValues(alpha: 0.3),
+                                        Colors.white.withValues(alpha: 0.16),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Colors.white
+                                          .withValues(alpha: 0.3),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.bolt_rounded,
+                                          size: 16, color: Colors.white),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'Muat Garasi Demo (2 Kendaraan)',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 12.5,
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.bolt_rounded,
-                                        size: 16, color: Colors.white),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      'Muat Garasi Demo (2 Kendaraan)',
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 12.5,
-                                        fontWeight: FontWeight.w700,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
-                                ),
                               ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ],
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -604,7 +601,7 @@ class _EmptyStateWelcome extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          const _FeatureRow(
+          _FeatureRow(
             icon: Icons.local_gas_station_rounded,
             iconBg: AppColors.tintBlueBg,
             iconColor: AppColors.tintBlueFg,
@@ -612,7 +609,7 @@ class _EmptyStateWelcome extends StatelessWidget {
             subtitle: 'Pantau konsumsi km/L dan otomatis ekstrak nota SPBU',
           ),
           const SizedBox(height: 10),
-          const _FeatureRow(
+          _FeatureRow(
             icon: Icons.build_rounded,
             iconBg: AppColors.tintMintBg,
             iconColor: AppColors.tintMintFg,
@@ -620,7 +617,7 @@ class _EmptyStateWelcome extends StatelessWidget {
             subtitle: 'Simpan perawatan berkala dan estimasi servis berikutnya',
           ),
           const SizedBox(height: 10),
-          const _FeatureRow(
+          _FeatureRow(
             icon: Icons.insert_chart_rounded,
             iconBg: AppColors.tintPeachBg,
             iconColor: AppColors.tintPeachFg,
@@ -1120,7 +1117,7 @@ class _QuickStatsRowPlaceholder extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         children: [
-          const Expanded(
+          Expanded(
             child: _QuickStatCard(
               iconBg: AppColors.tintBlueBg,
               icon: Icons.local_gas_station_rounded,
@@ -1130,7 +1127,7 @@ class _QuickStatsRowPlaceholder extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          const Expanded(
+          Expanded(
             child: _QuickStatCard(
               iconBg: AppColors.tintPeachBg,
               icon: Icons.speed_rounded,
@@ -1140,7 +1137,7 @@ class _QuickStatsRowPlaceholder extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          const Expanded(
+          Expanded(
             child: _QuickStatCard(
               iconBg: AppColors.tintMintBg,
               icon: Icons.account_balance_wallet_rounded,
@@ -1430,7 +1427,7 @@ class _AktivitasTerakhirSection extends StatelessWidget {
                     children: [
                       for (int i = 0; i < activities.length; i++) ...[
                         if (i > 0)
-                          const Divider(color: AppColors.divider, height: 1),
+                          Divider(color: AppColors.divider, height: 1),
                         _ActivityRow(
                           iconBg: activities[i].type == 'fuel'
                               ? AppColors.tintPeachBg
