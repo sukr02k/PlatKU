@@ -34,28 +34,33 @@ Untuk menjaga keamanan data pada skenario *offline*, aplikasi ini dilengkapi den
 ## Fitur Utama
 
 ### 1. Manajemen Garasi Multi-Kendaraan
-- **Multi-Profil Kendaraan**: Pencatatan sepeda motor dan mobil lengkap dengan nomor polisi, merk, model, tahun, kapasitas tangki, jenis BBM utama, dan foto kendaraan.
+- **Multi-Profil Kendaraan**: Pencatatan sepeda motor dan mobil lengkap dengan nomor polisi, merk, model, tahun, kapasitas tangki, jenis BBM utama, dan foto fisik kendaraan.
+- **Vehicle & Profile Photo Picker**: Pemilihan foto kendaraan dan foto profil avatar pengguna secara fleksibel langsung dari **Kamera** perangkat maupun **Galeri**, dilengkapi opsi ganti dan hapus foto.
 - **Vehicle Switcher Cepat**: Pemilih kendaraan aktif langsung di halaman *Beranda*, *BBM*, dan *Servis* tanpa perlu berpindah tab.
 - **Sinkronisasi & Rekalkulasi Odometer Otomatis**: Memperbarui dan menghitung ulang nilai odometer tertinggi kendaraan secara otomatis setiap kali catatan BBM atau servis ditambah, diedit, maupun dihapus.
+- **Alur Edit Kendaraan Mulus**: Penyuntingan spesifikasi kendaraan di halaman detail mempertahankan konteks halaman dengan pembaruan data lokal instan tanpa melempar pengguna keluar.
 
 ### 2. Pencatatan & Analitik BBM
 - **CRUD Transaksi BBM Lengkap**: Pencatatan dan pengeditan riwayat pengisian BBM (tanggal, jenis BBM, volume liter, harga per liter, total biaya, odometer, nama SPBU, status *full tank*, dan foto struk).
-- **Kalkulasi Efisiensi Bahan Bakar (`km/L`)**: Menghitung konsumsi bahan bakar rata-rata dan biaya per pengisian secara akurat.
+- **Kalkulasi Efisiensi Bahan Bakar (`km/L`)**: Menghitung konsumsi bahan bakar rata-rata dan biaya per pengisian secara akurat menggunakan metode *full-tank-to-full-tank*.
 - **Proteksi Validasi Odometer**: Mencegah kesalahan input odometer yang lebih rendah dari catatan sebelumnya pada pengisian baru.
 - **Visualisasi Grafik 6 Bulan**: Grafik batang pengeluaran bulanan interaktif menggunakan `fl_chart`.
+- **Pull-to-Refresh & Full-screen Struk Zoom**: Gestur tarik-ke-bawah untuk sinkronisasi data seketika serta penampil struk kasir layar penuh dengan pinch-to-zoom (`InteractiveViewer`).
 
 ### 3. Riwayat Servis & Brankas Dokumen
 - **CRUD Riwayat Servis Berkala**: Pencatatan dan pembaruan rincian perbaikan/servis berkala beserta pengingat jadwal servis berikutnya berdasarkan target tanggal maupun batas kilometer odometer.
-- **Pemantauan Masa Berlaku Dokumen**: Penyimpanan data STNK, Pajak Tahunan (PKB), BPKB, SIM, dan Asuransi dengan indikator status (*Aktif*, *Segera Habis*, *Kadaluarsa*) serta notifikasi lokal terjadwal.
+- **Pemantauan Masa Berlaku Dokumen & Overdue Reminder**: Penyimpanan data STNK, Pajak Tahunan (PKB), BPKB, SIM, dan Asuransi dengan status visual (*Aktif*, *Segera Habis*, *Kadaluarsa*) serta sistem notifikasi dokumen lewat jatuh tempo hingga 30 hari ke belakang.
 - **Perpanjangan Cepat Dokumen**: Pintasan perpanjangan masa berlaku dokumen (`+1 Tahun` dan `+5 Tahun`) langsung dari kartu dokumen maupun halaman formulir.
+- **Interactive Document Zoom Viewer**: Pembesaran foto dokumen legal (STNK, SIM, BPKB) layar penuh dengan gestur zoom untuk memudahkan pembacaan nomor rangka, nomor mesin, dan masa berlaku.
 
 ### 4. On-Device OCR, Laporan & Keamanan Data
 - **Scan Nota SPBU & Bengkel (On-Device OCR)**: Ekstraksi otomatis tanggal transaksi, liter BBM, harga per liter, jenis BBM, dan total biaya dari foto struk menggunakan **Google ML Kit Text Recognition**.
 - **Ekspor Laporan PDF (A4) & CSV**: Pembuatan laporan riwayat kendaraan siap cetak (dilengkapi pratinjau cetak via `printing`) serta ekspor spreadsheet `.csv` via `share_plus`.
-- **Backup & Restore Database Lokal (`.db`)**: Pencadangan dan pemulihan file database SQLite `kendaraanku.db` dari penyimpanan perangkat dengan validasi *magic bytes* header `SQLite format 3`.
-- **Keamanan Akun & Tema Adaptif**: Penyimpanan password akun lokal menggunakan *Salted SHA-256* serta dukungan tema **Terang**, **Gelap**, dan **Ikuti Sistem** secara *real-time*.
+- **Backup & Restore Database Lokal (`.db`)**: Pencadangan dan pemulihan database SQLite `kendaraanku.db` dengan validasi *magic bytes* header `SQLite format 3` serta transisi bersih *state re-initialization* ke halaman awal.
+- **Keamanan Akun & Tema Adaptif**: Penyimpanan password akun lokal menggunakan *Salted SHA-256*, validasi unik email akun, serta dukungan tema **Terang**, **Gelap**, dan **Ikuti Sistem** secara *real-time*.
 
 ---
+
 
 ## Arsitektur Aplikasi
 
@@ -82,7 +87,7 @@ flowchart TD
 
     subgraph Data["Data Layer"]
         Repos["Repositories (Vehicle, FuelLog, ServiceLog, Document, Auth)"]
-        DB[("DatabaseHelper (SQLite v2)")]
+        DB[("DatabaseHelper (SQLite v3)")]
         Prefs[("SharedPreferences (Session & ThemeMode)")]
     end
 
@@ -110,7 +115,7 @@ lib/
 │   ├── local/            # AuthLocalDatasource & DemoDataSeeder
 │   ├── models/           # Model entitas (User, Vehicle, FuelLog, ServiceLog, VehicleDocument)
 │   ├── repositories/     # Abstraksi query CRUD & rekalkulasi odometer otomatis
-│   └── database_helper.dart # Konfigurasi skema SQLite v2 & migrasi tabel
+│   └── database_helper.dart # Konfigurasi skema SQLite v3, indexing & migrasi tabel
 ├── presentation/
 │   ├── auth/             # SplashPage, OnboardingPage, LoginPage, RegisterPage
 │   ├── blocs/            # State management berbasis BLoC (Vehicle, FuelLog, ServiceLog, Document, Dashboard, Auth)
@@ -130,7 +135,7 @@ lib/
 
 ## Skema Database (ERD)
 
-Database lokal SQLite (`DatabaseHelper`, versi 2) terdiri dari **6 tabel** yang dilengkapi *Foreign Key Constraints* untuk menjaga integritas relasional antar pengguna, kendaraan, catatan operasional, dan dokumen:
+Database lokal SQLite (`DatabaseHelper`, versi 3) terdiri dari **6 tabel** yang dilengkapi *Foreign Key Constraints (`ON DELETE CASCADE`)* dan *B-Tree Indexes* pada kolom pencarian utama (`user_id`, `vehicle_id`, `date`, `expiry_date`):
 
 ```mermaid
 erDiagram

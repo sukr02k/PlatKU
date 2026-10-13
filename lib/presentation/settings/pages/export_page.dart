@@ -10,6 +10,7 @@ import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
 import 'package:flutter_kendaraanku_app/core/utils/export_helper.dart';
 import 'package:flutter_kendaraanku_app/data/repositories/fuel_log_repository.dart';
 import 'package:flutter_kendaraanku_app/data/repositories/service_log_repository.dart';
+import 'package:flutter_kendaraanku_app/data/repositories/vehicle_document_repository.dart';
 
 class ExportPage extends StatefulWidget {
   final int vehicleId;
@@ -122,11 +123,14 @@ class _ExportPageState extends State<ExportPage> {
           await FuelLogRepository().getByVehicle(widget.vehicleId);
       final serviceResult =
           await ServiceLogRepository().getByVehicle(widget.vehicleId);
+      final docResult =
+          await VehicleDocumentRepository().getByVehicle(widget.vehicleId);
 
       final fuelLogs = fuelResult.getOrElse(() => []);
       final serviceLogs = serviceResult.getOrElse(() => []);
+      final docs = docResult.getOrElse(() => []);
 
-      if (fuelLogs.isEmpty && serviceLogs.isEmpty) {
+      if (fuelLogs.isEmpty && serviceLogs.isEmpty && docs.isEmpty) {
         _showSnackBar('Belum ada data untuk diekspor', isError: true);
         return;
       }
@@ -136,6 +140,7 @@ class _ExportPageState extends State<ExportPage> {
         plateNumber: widget.plateNumber,
         fuelLogs: fuelLogs,
         serviceLogs: serviceLogs,
+        documents: docs,
       );
       if (mounted) setState(() => _lastExportedPath = path);
 

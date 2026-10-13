@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
 import 'package:flutter_kendaraanku_app/core/utils/formatters.dart';
@@ -9,6 +10,8 @@ import 'package:flutter_kendaraanku_app/data/repositories/fuel_log_repository.da
 import 'package:flutter_kendaraanku_app/data/repositories/service_log_repository.dart';
 import 'package:flutter_kendaraanku_app/data/repositories/vehicle_document_repository.dart';
 import 'package:flutter_kendaraanku_app/data/repositories/vehicle_repository.dart';
+import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_bloc.dart';
+import 'package:flutter_kendaraanku_app/presentation/vehicle/pages/detail_vehicle_page.dart';
 
 class NotificationsPage extends StatelessWidget {
   const NotificationsPage({super.key});
@@ -30,6 +33,11 @@ class NotificationsPage extends StatelessWidget {
     final activities = <_ActivityNotif>[];
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
+
+    final vehicleById = {
+      for (final v in vehicles)
+        if (v.id != null) v.id!: v,
+    };
 
     for (final v in vehicles) {
       final serviceResult = await serviceRepo.getByVehicle(v.id!);
@@ -60,6 +68,7 @@ class NotificationsPage extends StatelessWidget {
                 vehicleName: '${v.name}$odoSuffix',
                 dueDate: effectiveDate,
                 daysUntil: daysUntil,
+                vehicle: v,
               ));
             }
           }
@@ -70,6 +79,7 @@ class NotificationsPage extends StatelessWidget {
                 '${log.workshopName ?? v.name} · ${Formatters.date(log.date)}',
             amount: log.cost,
             date: log.date,
+            vehicle: v,
           ));
         }
       });
@@ -84,35 +94,34 @@ class NotificationsPage extends StatelessWidget {
                 '${log.stationName ?? v.name} · ${Formatters.date(log.date)}',
             amount: log.totalCost,
             date: log.date,
+            vehicle: v,
           ));
         }
       });
     }
 
-    final vehicleNameById = {
-      for (final v in vehicles)
-        if (v.id != null) v.id!: v.name,
-    };
     final docResult = await documentRepo.getByUser(userId);
     docResult.fold((l) => null, (docs) {
       for (final d in docs) {
         if (d.expiryDate == null) continue;
         final days = d.expiryDate!.difference(today).inDays;
-        if (days < 0 || days > 30) continue;
+        if (days < -30 || days > 60) continue;
+        final v = vehicleById[d.vehicleId];
         reminders.add(_ReminderNotif(
           kind: _ReminderKind.document,
-          title: d.documentType,
-          vehicleName: vehicleNameById[d.vehicleId] ?? 'Kendaraan',
+          title: 'Perpanjang ${d.documentType}',
+          vehicleName: v != null ? '${v.name} (${v.plateNumber})' : (d.documentNumber ?? 'Dokumen'),
           dueDate: d.expiryDate!,
           daysUntil: days,
+          vehicle: v,
         ));
       }
     });
 
-    reminders.sort((a, b) => a.daysUntil.compareTo(b.daysUntil));
+    reminders.sort((a, b) => a.dueDate.compareTo(b.dueDate));
     activities.sort((a, b) => b.date.compareTo(a.date));
 
-    return _NotifData(reminders, activities.take(10).toList());
+    return _NotifData(reminders, activities.take(15).toList());
   }
 
   @override
@@ -147,13 +156,13 @@ class NotificationsPage extends StatelessWidget {
                           if (data.reminders.isNotEmpty) ...[
                             _buildSectionHeader('PENGINGAT JATUH TEMPO'),
                             ...data.reminders
-                                .map((r) => _buildReminderCard(r)),
+                                .map((r) => _buildReminderCard(context, r)),
                             const SizedBox(height: 8),
                           ],
                           if (data.activities.isNotEmpty) ...[
                             _buildSectionHeader('AKTIVITAS TERBARU'),
                             ...data.activities
-                                .map((a) => _buildActivityCard(a)),
+                                .map((a) => _buildActivityCard(context, a)),
                           ],
                           const SizedBox(height: 32),
                         ],
@@ -365,7 +374,22 @@ class NotificationsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildReminderCard(_ReminderNotif reminder) {
+  void _navigateToVehicle(BuildContext context, VehicleModel? vehicle) {
+    if (vehicle == null) return;
+    final vehicleBloc = context.read<VehicleBloc>();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BlocProvider.value(
+          value: vehicleBloc,
+          child: DetailVehiclePage(vehicle: vehicle),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReminderCard(BuildContext context, _ReminderNotif reminder) {
+    final isOverdue = reminder.daysUntil < 0;
     final isUrgent = reminder.daysUntil <= 7;
     final Color tintBg = isUrgent ? AppColors.tintRoseBg : AppColors.tintAmberBg;
     final Color tintFg = isUrgent ? AppColors.tintRoseFg : AppColors.tintAmberFg;
@@ -375,105 +399,118 @@ class NotificationsPage extends StatelessWidget {
     final String prefix =
         reminder.kind == _ReminderKind.document ? 'Dokumen: ' : '';
 
+    final dayText = isOverdue
+        ? 'Lewat ${-reminder.daysUntil} hari'
+        : reminder.daysUntil == 0
+            ? 'Hari ini'
+            : reminder.daysUntil == 1
+                ? 'Besok'
+                : '${reminder.daysUntil} hari lagi';
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppColors.primarySofter,
-          border: Border.all(color: AppColors.primarySoft),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _navigateToVehicle(context, reminder.vehicle),
           borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: tintBg,
-                borderRadius: BorderRadius.circular(11),
-              ),
-              child: Icon(icon, size: 18, color: tintFg),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.primarySofter,
+              border: Border.all(color: AppColors.primarySoft),
+              borderRadius: BorderRadius.circular(20),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: tintBg,
+                    borderRadius: BorderRadius.circular(11),
+                  ),
+                  child: Icon(icon, size: 18, color: tintFg),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                '$prefix${reminder.title}',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.text,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            if (isUrgent) ...[
-                              const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: AppColors.danger,
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  'URGEN',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    '$prefix${reminder.title}',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.text,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                              ),
-                            ],
-                          ],
-                        ),
+                                if (isOverdue || isUrgent) ...[
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: isOverdue
+                                          ? AppColors.danger
+                                          : AppColors.tintRoseFg,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      isOverdue ? 'KEDALUWARSA' : 'URGEN',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w800,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            dayText,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w600,
+                              color: tintFg,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(height: 4),
                       Text(
-                        reminder.daysUntil == 0
-                            ? 'Hari ini'
-                            : reminder.daysUntil == 1
-                                ? 'Besok'
-                                : '${reminder.daysUntil} hari',
+                        '${reminder.vehicleName} · ${Formatters.date(reminder.dueDate)}',
                         style: GoogleFonts.plusJakartaSans(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w600,
-                          color: tintFg,
+                          fontSize: 12,
+                          color: AppColors.textMuted,
+                          height: 1.45,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${reminder.vehicleName} · ${Formatters.date(reminder.dueDate)}',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
-                      color: AppColors.textMuted,
-                      height: 1.45,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildActivityCard(_ActivityNotif activity) {
+  Widget _buildActivityCard(BuildContext context, _ActivityNotif activity) {
     final bool isFuel = activity.type == 'fuel';
     final Color tintBg =
         isFuel ? AppColors.tintPeachBg : AppColors.tintMintBg;
@@ -484,77 +521,84 @@ class NotificationsPage extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          border: Border.all(color: AppColors.border),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _navigateToVehicle(context, activity.vehicle),
           borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: tintBg,
-                borderRadius: BorderRadius.circular(11),
-              ),
-              child: Icon(icon, size: 18, color: tintFg),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              border: Border.all(color: AppColors.border),
+              borderRadius: BorderRadius.circular(20),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: tintBg,
+                    borderRadius: BorderRadius.circular(11),
+                  ),
+                  child: Icon(icon, size: 18, color: tintFg),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Text(
-                          activity.title,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.text,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              activity.title,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.text,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          const SizedBox(width: 8),
+                          Text(
+                            Formatters.timeAgo(activity.date),
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textSoft,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        activity.subtitle,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
+                          color: AppColors.textMuted,
+                          height: 1.45,
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(height: 2),
                       Text(
-                        Formatters.timeAgo(activity.date),
+                        Formatters.currency(activity.amount),
                         style: GoogleFonts.plusJakartaSans(
-                          fontSize: 10.5,
+                          fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textSoft,
+                          color: tintFg,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    activity.subtitle,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
-                      color: AppColors.textMuted,
-                      height: 1.45,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    Formatters.currency(activity.amount),
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: tintFg,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -576,6 +620,7 @@ class _ReminderNotif {
   final String vehicleName;
   final DateTime dueDate;
   final int daysUntil;
+  final VehicleModel? vehicle;
 
   _ReminderNotif({
     required this.kind,
@@ -583,6 +628,7 @@ class _ReminderNotif {
     required this.vehicleName,
     required this.dueDate,
     required this.daysUntil,
+    this.vehicle,
   });
 }
 
@@ -592,6 +638,7 @@ class _ActivityNotif {
   final String subtitle;
   final double amount;
   final DateTime date;
+  final VehicleModel? vehicle;
 
   _ActivityNotif({
     required this.type,
@@ -599,5 +646,6 @@ class _ActivityNotif {
     required this.subtitle,
     required this.amount,
     required this.date,
+    this.vehicle,
   });
 }

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -28,7 +29,9 @@ import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_state
 import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_event.dart';
 import 'package:flutter_kendaraanku_app/presentation/docs/pages/docs_page.dart';
 import 'package:flutter_kendaraanku_app/presentation/fuel/pages/add_fuel_log_page.dart';
+import 'package:flutter_kendaraanku_app/presentation/fuel/pages/fuel_page.dart';
 import 'package:flutter_kendaraanku_app/presentation/service/pages/add_service_log_page.dart';
+import 'package:flutter_kendaraanku_app/presentation/service/pages/service_page.dart';
 import 'package:flutter_kendaraanku_app/presentation/settings/pages/export_page.dart';
 import 'package:flutter_kendaraanku_app/presentation/vehicle/pages/detail_vehicle_page.dart';
 import 'package:flutter_kendaraanku_app/presentation/notifications/pages/notifications_page.dart';
@@ -61,6 +64,7 @@ class HomePage extends StatelessWidget {
             final hasVehicles = vehicles.isNotEmpty;
 
             final content = SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -117,11 +121,32 @@ class HomePage extends StatelessWidget {
                   FuelLogRepository(),
                   ServiceLogRepository(),
                 )..add(LoadDashboard(vehicleId)),
-                child: content,
+                child: Builder(
+                  builder: (dashCtx) => RefreshIndicator(
+                    color: AppColors.primary,
+                    onRefresh: () async {
+                      dashCtx.read<DashboardBloc>().add(LoadDashboard(vehicleId));
+                      final userId = await AuthLocalDatasource().getUserId();
+                      if (userId != null && context.mounted) {
+                        context.read<VehicleBloc>().add(LoadVehicles(userId));
+                      }
+                    },
+                    child: content,
+                  ),
+                ),
               );
             }
 
-            return content;
+            return RefreshIndicator(
+              color: AppColors.primary,
+              onRefresh: () async {
+                final userId = await AuthLocalDatasource().getUserId();
+                if (userId != null && context.mounted) {
+                  context.read<VehicleBloc>().add(LoadVehicles(userId));
+                }
+              },
+              child: content,
+            );
           },
         ),
       ),
@@ -881,16 +906,57 @@ class _HeroVehicleCard extends StatelessWidget {
               ),
             ),
           ),
-          // Vehicle icon on the right
-          Positioned(
-            right: -10,
-            top: 10,
-            child: Icon(
-              _vehicleIcon(vehicle?.type),
-              size: 90,
-              color: Colors.white.withValues(alpha: 0.25),
+          // Vehicle photo or icon on the right
+          if (vehicle?.imagePath != null &&
+              vehicle!.imagePath!.isNotEmpty &&
+              File(vehicle!.imagePath!).existsSync())
+            Positioned(
+              right: 0,
+              top: 4,
+              child: GestureDetector(
+                onTap: onDetailTap,
+                child: Container(
+                  width: 82,
+                  height: 82,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.35),
+                      width: 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.16),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.file(
+                      File(vehicle!.imagePath!),
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => Icon(
+                        _vehicleIcon(vehicle?.type),
+                        size: 46,
+                        color: Colors.white.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            )
+          else
+            Positioned(
+              right: -10,
+              top: 10,
+              child: Icon(
+                _vehicleIcon(vehicle?.type),
+                size: 90,
+                color: Colors.white.withValues(alpha: 0.25),
+              ),
             ),
-          ),
           // Content
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1396,6 +1462,46 @@ class _ReminderCard extends StatelessWidget {
 class _AktivitasTerakhirSection extends StatelessWidget {
   const _AktivitasTerakhirSection();
 
+  void _openActivityTarget(BuildContext context, String type) {
+    final vehicleBloc = context.read<VehicleBloc>();
+    final dashBloc = context.read<DashboardBloc?>();
+    final vState = vehicleBloc.state;
+    final vehicleId =
+        vState is VehicleLoaded ? vState.selectedVehicle?.id : null;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BlocProvider.value(
+          value: vehicleBloc,
+          child: type == 'fuel' ? const FuelPage() : const ServicePage(),
+        ),
+      ),
+    ).then((_) {
+      if (vehicleId != null) {
+        dashBloc?.add(LoadDashboard(vehicleId));
+      }
+    });
+  }
+
+  void _showAllActivitiesSheet(
+    BuildContext context,
+    List<ActivityItem> activities,
+  ) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) => _AllActivitiesBottomSheet(
+        activities: activities,
+        onTapItem: (type) {
+          Navigator.pop(sheetCtx);
+          _openActivityTarget(context, type);
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final bloc = context.watch<DashboardBloc?>();
@@ -1410,12 +1516,13 @@ class _AktivitasTerakhirSection extends StatelessWidget {
           if (activities.isEmpty) {
             return _buildEmpty();
           }
+          final topActivities = activities.take(5).toList();
           return Column(
             children: [
               SectionTitle(
-                  title: 'Aktivitas Terakhir',
-                  actionText: 'Lihat semua',
-                  onAction: () => context.push(const NotificationsPage()),
+                title: 'Aktivitas Terakhir',
+                actionText: 'Lihat semua',
+                onAction: () => _showAllActivitiesSheet(context, activities),
               ),
               const SizedBox(height: 12),
               Padding(
@@ -1425,22 +1532,25 @@ class _AktivitasTerakhirSection extends StatelessWidget {
                       const EdgeInsets.symmetric(vertical: 4, horizontal: 14),
                   child: Column(
                     children: [
-                      for (int i = 0; i < activities.length; i++) ...[
+                      for (int i = 0; i < topActivities.length; i++) ...[
                         if (i > 0)
                           Divider(color: AppColors.divider, height: 1),
                         _ActivityRow(
-                          iconBg: activities[i].type == 'fuel'
+                          iconBg: topActivities[i].type == 'fuel'
                               ? AppColors.tintPeachBg
                               : AppColors.tintMintBg,
-                          icon: activities[i].type == 'fuel'
+                          icon: topActivities[i].type == 'fuel'
                               ? Icons.local_gas_station_rounded
                               : Icons.build_rounded,
-                          iconColor: activities[i].type == 'fuel'
+                          iconColor: topActivities[i].type == 'fuel'
                               ? AppColors.tintPeachFg
                               : AppColors.tintMintFg,
-                          title: activities[i].title,
-                          subtitle: activities[i].subtitle,
-                          amount: '-${Formatters.currency(activities[i].amount)}',
+                          title: topActivities[i].title,
+                          subtitle: topActivities[i].subtitle,
+                          amount:
+                              '-${Formatters.currency(topActivities[i].amount)}',
+                          onTap: () => _openActivityTarget(
+                              context, topActivities[i].type),
                         ),
                       ],
                     ],
@@ -1462,8 +1572,8 @@ class _AktivitasTerakhirSection extends StatelessWidget {
         Builder(
           builder: (context) => SectionTitle(
             title: 'Aktivitas Terakhir',
-            actionText: 'Lihat semua',
-            onAction: () => context.push(const NotificationsPage()),
+            actionText: 'Catat BBM',
+            onAction: () => _openActivityTarget(context, 'fuel'),
           ),
         ),
         const SizedBox(height: 12),
@@ -1482,6 +1592,152 @@ class _AktivitasTerakhirSection extends StatelessWidget {
   }
 }
 
+class _AllActivitiesBottomSheet extends StatefulWidget {
+  final List<ActivityItem> activities;
+  final ValueChanged<String> onTapItem;
+
+  const _AllActivitiesBottomSheet({
+    required this.activities,
+    required this.onTapItem,
+  });
+
+  @override
+  State<_AllActivitiesBottomSheet> createState() =>
+      _AllActivitiesBottomSheetState();
+}
+
+class _AllActivitiesBottomSheetState extends State<_AllActivitiesBottomSheet> {
+  String _filter = 'all';
+
+  @override
+  Widget build(BuildContext context) {
+    final filtered = _filter == 'all'
+        ? widget.activities
+        : widget.activities.where((a) => a.type == _filter).toList();
+
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.78,
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppColors.border,
+              borderRadius: BorderRadius.circular(100),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Semua Aktivitas Terakhir',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.text,
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Icon(Icons.close_rounded, color: AppColors.textMuted),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _buildFilterChip('all', 'Semua (${widget.activities.length})'),
+              const SizedBox(width: 8),
+              _buildFilterChip(
+                'fuel',
+                'BBM (${widget.activities.where((a) => a.type == 'fuel').length})',
+              ),
+              const SizedBox(width: 8),
+              _buildFilterChip(
+                'service',
+                'Servis (${widget.activities.where((a) => a.type == 'service').length})',
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (filtered.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 32),
+              child: Text(
+                'Tidak ada aktivitas pada kategori ini',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 13,
+                  color: AppColors.textMuted,
+                ),
+              ),
+            )
+          else
+            Flexible(
+              child: ListView.separated(
+                shrinkWrap: true,
+                itemCount: filtered.length,
+                separatorBuilder: (_, _) =>
+                    Divider(color: AppColors.divider, height: 1),
+                itemBuilder: (context, i) {
+                  final item = filtered[i];
+                  return _ActivityRow(
+                    iconBg: item.type == 'fuel'
+                        ? AppColors.tintPeachBg
+                        : AppColors.tintMintBg,
+                    icon: item.type == 'fuel'
+                        ? Icons.local_gas_station_rounded
+                        : Icons.build_rounded,
+                    iconColor: item.type == 'fuel'
+                        ? AppColors.tintPeachFg
+                        : AppColors.tintMintFg,
+                    title: item.title,
+                    subtitle: item.subtitle,
+                    amount: '-${Formatters.currency(item.amount)}',
+                    onTap: () => widget.onTapItem(item.type),
+                  );
+                },
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String key, String label) {
+    final isActive = _filter == key;
+    return GestureDetector(
+      onTap: () => setState(() => _filter = key),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive ? AppColors.primary : AppColors.surface2,
+          borderRadius: BorderRadius.circular(100),
+          border: isActive ? null : Border.all(color: AppColors.border),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 11.5,
+            fontWeight: FontWeight.w700,
+            color: isActive ? Colors.white : AppColors.textMuted,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _ActivityRow extends StatelessWidget {
   final Color iconBg;
   final IconData icon;
@@ -1489,6 +1745,7 @@ class _ActivityRow extends StatelessWidget {
   final String title;
   final String subtitle;
   final String amount;
+  final VoidCallback? onTap;
 
   const _ActivityRow({
     required this.iconBg,
@@ -1497,53 +1754,66 @@ class _ActivityRow extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.amount,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        children: [
-          TintIconBox(
-            icon: Icon(icon, size: 18, color: iconColor),
-            backgroundColor: iconBg,
-            size: 38,
-            borderRadius: 10,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.text,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-              ],
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          children: [
+            TintIconBox(
+              icon: Icon(icon, size: 18, color: iconColor),
+              backgroundColor: iconBg,
+              size: 38,
+              borderRadius: 10,
             ),
-          ),
-          Text(
-            amount,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.text,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            Text(
+              amount,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.text,
+              ),
+            ),
+            if (onTap != null) ...[
+              const SizedBox(width: 4),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 16,
+                color: AppColors.textSoft,
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

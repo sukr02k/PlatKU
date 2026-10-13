@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
 import 'package:flutter_kendaraanku_app/data/database_helper.dart';
+import 'package:flutter_kendaraanku_app/presentation/auth/pages/splash_page.dart';
 
 class BackupPage extends StatefulWidget {
   const BackupPage({super.key});
@@ -142,9 +143,9 @@ class _BackupPageState extends State<BackupPage> {
           await pickedFile.copy('${dir.path}/kendaraanku_backup_$ts.db');
       await _applyRestoreFromFile(savedCopy);
       await _loadBackups();
-      _showSnack(
-        'Backup eksternal berhasil diimpor & di-restore!',
-      );
+      if (mounted) {
+        await _showRestoreSuccessDialog();
+      }
     } on MissingPluginException {
       _showSnack(
         'Fitur pilih file eksternal hanya tersedia di perangkat Android.',
@@ -169,13 +170,90 @@ class _BackupPageState extends State<BackupPage> {
     setState(() => _busy = true);
     try {
       await _applyRestoreFromFile(b.file);
-      _showSnack(
-          'Backup berhasil di-restore. Data telah diperbarui.');
+      if (mounted) {
+        await _showRestoreSuccessDialog();
+      }
     } catch (e) {
       _showSnack('Gagal restore: $e', danger: true);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<void> _showRestoreSuccessDialog() async {
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.tintMintBg,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.check_circle_rounded,
+                color: AppColors.tintMintFg,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Restore Berhasil',
+                style: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                  color: AppColors.text,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Database telah berhasil dipulihkan. Aplikasi akan dimuat ulang ke halaman awal agar seluruh data dan sesi tersinkronisasi sempurna.',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 13,
+            color: AppColors.textMuted,
+            height: 1.5,
+          ),
+        ),
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const SplashPage()),
+                  (route) => false,
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              child: Text(
+                'Muat Ulang Aplikasi',
+                style: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _share(_BackupFile b) async {

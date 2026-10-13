@@ -59,15 +59,31 @@ class VehicleRepository {
   Future<Either<String, bool>> archive(int id) async {
     try {
       final db = await _dbHelper.database;
-      await db.update(
-        'vehicles',
-        {'is_active': 0, 'updated_at': DateTime.now().toIso8601String()},
-        where: 'id = ?',
-        whereArgs: [id],
-      );
+      await db.transaction((txn) async {
+        await txn.delete(
+          'fuel_logs',
+          where: 'vehicle_id = ?',
+          whereArgs: [id],
+        );
+        await txn.delete(
+          'service_logs',
+          where: 'vehicle_id = ?',
+          whereArgs: [id],
+        );
+        await txn.delete(
+          'vehicle_documents',
+          where: 'vehicle_id = ?',
+          whereArgs: [id],
+        );
+        await txn.delete(
+          'vehicles',
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+      });
       return const Right(true);
     } catch (e) {
-      return Left('Gagal mengarsipkan: $e');
+      return Left('Gagal menghapus kendaraan: $e');
     }
   }
 

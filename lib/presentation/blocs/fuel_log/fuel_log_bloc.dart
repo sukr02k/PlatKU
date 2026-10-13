@@ -88,30 +88,44 @@ class FuelLogBloc extends Bloc<FuelLogEvent, FuelLogState> {
     final totalLiters = logs.fold(0.0, (sum, l) => sum + l.liters);
     final fillCount = logs.length;
 
-    // Calculate consumption using full-tank-to-full-tank method
-    double avgConsumption = 0;
-    final fullTankLogs = logs.where((l) => l.isFullTank).toList()
-      ..sort((a, b) => a.date.compareTo(b.date));
+    // Sort all logs chronologically (by date & odometer ascending)
+    final sorted = List<FuelLogModel>.from(logs)
+      ..sort((a, b) {
+        final cmp = a.date.compareTo(b.date);
+        return cmp != 0 ? cmp : a.odometer.compareTo(b.odometer);
+      });
 
-    if (fullTankLogs.length >= 2) {
-      double totalKm = 0;
-      double totalLitersForConsumption = 0;
-      for (int i = 1; i < fullTankLogs.length; i++) {
-        final km = fullTankLogs[i].odometer - fullTankLogs[i - 1].odometer;
-        if (km > 0) {
-          totalKm += km;
-          totalLitersForConsumption += fullTankLogs[i].liters;
-        }
+    // Calculate consumption using full-tank-to-full-tank method
+    // (accumulating any partial fills between two full-tank fills)
+    double avgConsumption = 0;
+    final fullTankIndices = <int>[];
+    for (int i = 0; i < sorted.length; i++) {
+      if (sorted[i].isFullTank) fullTankIndices.add(i);
+    }
+
+    if (fullTankIndices.length >= 2) {
+      final firstFullIdx = fullTankIndices.first;
+      final lastFullIdx = fullTankIndices.last;
+      final totalKm =
+          sorted[lastFullIdx].odometer - sorted[firstFullIdx].odometer;
+      double totalLitersBetween = 0;
+      for (int i = firstFullIdx + 1; i <= lastFullIdx; i++) {
+        totalLitersBetween += sorted[i].liters;
       }
-      if (totalLitersForConsumption > 0) {
-        avgConsumption = totalKm / totalLitersForConsumption;
+      if (totalKm > 0 && totalLitersBetween > 0) {
+        avgConsumption = totalKm / totalLitersBetween;
+      }
+    } else if (sorted.length >= 2) {
+      final totalKm = sorted.last.odometer - sorted.first.odometer;
+      final litersAfterFirst =
+          sorted.skip(1).fold(0.0, (sum, l) => sum + l.liters);
+      if (totalKm > 0 && litersAfterFirst > 0) {
+        avgConsumption = totalKm / litersAfterFirst;
       }
     }
 
     // Cost per km
     double totalKmAll = 0;
-    final sorted = List<FuelLogModel>.from(logs)
-      ..sort((a, b) => a.date.compareTo(b.date));
     if (sorted.length >= 2) {
       totalKmAll = sorted.last.odometer - sorted.first.odometer;
     }

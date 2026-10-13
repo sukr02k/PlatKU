@@ -5,8 +5,10 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+import 'package:flutter_kendaraanku_app/core/utils/formatters.dart';
 import 'package:flutter_kendaraanku_app/data/models/fuel_log_model.dart';
 import 'package:flutter_kendaraanku_app/data/models/service_log_model.dart';
+import 'package:flutter_kendaraanku_app/data/models/vehicle_document_model.dart';
 
 class ExportHelper {
   /// Export fuel logs to CSV file, returns the file path
@@ -89,6 +91,7 @@ class ExportHelper {
     required String plateNumber,
     required List<FuelLogModel> fuelLogs,
     required List<ServiceLogModel> serviceLogs,
+    List<VehicleDocumentModel> documents = const [],
   }) async {
     final pdf = pw.Document();
 
@@ -103,48 +106,92 @@ class ExportHelper {
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
         build: (context) => [
-          pw.Header(level: 0, text: 'Laporan Kendaraan - $vehicleName'),
+          pw.Header(
+            level: 0,
+            text: 'Laporan Kendaraan MotoVault - $vehicleName',
+          ),
           pw.Paragraph(text: 'Plat Nomor: $plateNumber'),
           pw.Paragraph(
-            text:
-                'Tanggal: ${DateTime.now().toString().substring(0, 10)}',
+            text: 'Tanggal Cetak: ${Formatters.date(DateTime.now())}',
           ),
-          pw.SizedBox(height: 20),
+          pw.SizedBox(height: 16),
 
           // Summary
-          pw.Header(level: 1, text: 'Ringkasan'),
+          pw.Header(level: 1, text: 'Ringkasan Operasional'),
           pw.Bullet(
             text:
-                'Total BBM: ${fuelLogs.length} pengisian, ${totalLiters.toStringAsFixed(1)} liter',
+                'Total BBM: ${fuelLogs.length}x pengisian (${Formatters.liters(totalLiters)})',
           ),
           pw.Bullet(
-            text:
-                'Total Biaya BBM: Rp ${totalFuelCost.toStringAsFixed(0)}',
+            text: 'Total Biaya BBM: ${Formatters.currency(totalFuelCost)}',
           ),
           pw.Bullet(
             text: 'Total Servis: ${serviceLogs.length} kali',
           ),
           pw.Bullet(
             text:
-                'Total Biaya Servis: Rp ${totalServiceCost.toStringAsFixed(0)}',
+                'Total Biaya Servis: ${Formatters.currency(totalServiceCost)}',
           ),
           pw.Bullet(
             text:
-                'Total Pengeluaran: Rp ${(totalFuelCost + totalServiceCost).toStringAsFixed(0)}',
+                'Total Pengeluaran: ${Formatters.currency(totalFuelCost + totalServiceCost)}',
           ),
+          if (documents.isNotEmpty)
+            pw.Bullet(
+              text: 'Dokumen Tercatat: ${documents.length} dokumen',
+            ),
           pw.SizedBox(height: 20),
+
+          // Documents table
+          if (documents.isNotEmpty) ...[
+            pw.Header(level: 1, text: 'Daftar Dokumen Kendaraan'),
+            pw.TableHelper.fromTextArray(
+              headers: [
+                'Jenis Dokumen',
+                'Nomor Dokumen',
+                'Masa Berlaku',
+                'Status',
+              ],
+              data: documents.map((d) {
+                final days = d.daysUntilExpiry;
+                final status = days == null
+                    ? 'Tercatat'
+                    : days < 0
+                        ? 'Kedaluwarsa (${-days} hr lalu)'
+                        : days <= 30
+                            ? 'Segera Habis ($days hr lagi)'
+                            : 'Aktif ($days hr lagi)';
+                return [
+                  d.documentType,
+                  d.documentNumber ?? '-',
+                  d.expiryDate != null ? Formatters.date(d.expiryDate!) : '-',
+                  status,
+                ];
+              }).toList(),
+            ),
+            pw.SizedBox(height: 20),
+          ],
 
           // Fuel logs table
           if (fuelLogs.isNotEmpty) ...[
-            pw.Header(level: 1, text: 'Riwayat BBM'),
+            pw.Header(level: 1, text: 'Riwayat Pengisian BBM'),
             pw.TableHelper.fromTextArray(
-              headers: ['Tanggal', 'Odometer', 'Liter', 'Total'],
+              headers: [
+                'Tanggal',
+                'Jenis BBM',
+                'Tipe',
+                'Odometer',
+                'Liter',
+                'Total',
+              ],
               data: fuelLogs
                   .map((l) => [
-                        l.date.toString().substring(0, 10),
-                        '${l.odometer.toStringAsFixed(0)} km',
-                        '${l.liters.toStringAsFixed(1)} L',
-                        'Rp ${l.totalCost.toStringAsFixed(0)}',
+                        Formatters.date(l.date),
+                        l.fuelType,
+                        l.isFullTank ? 'Full' : 'Parsial',
+                        Formatters.odometer(l.odometer),
+                        Formatters.liters(l.liters),
+                        Formatters.currency(l.totalCost),
                       ])
                   .toList(),
             ),
@@ -153,15 +200,22 @@ class ExportHelper {
 
           // Service logs table
           if (serviceLogs.isNotEmpty) ...[
-            pw.Header(level: 1, text: 'Riwayat Servis'),
+            pw.Header(level: 1, text: 'Riwayat Servis & Perawatan'),
             pw.TableHelper.fromTextArray(
-              headers: ['Tanggal', 'Jenis', 'Deskripsi', 'Biaya'],
+              headers: [
+                'Tanggal',
+                'Kategori',
+                'Deskripsi',
+                'Bengkel',
+                'Biaya',
+              ],
               data: serviceLogs
                   .map((l) => [
-                        l.date.toString().substring(0, 10),
+                        Formatters.date(l.date),
                         l.serviceType,
                         l.description,
-                        'Rp ${l.cost.toStringAsFixed(0)}',
+                        l.workshopName ?? '-',
+                        Formatters.currency(l.cost),
                       ])
                   .toList(),
             ),

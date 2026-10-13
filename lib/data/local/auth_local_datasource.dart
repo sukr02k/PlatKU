@@ -5,12 +5,18 @@ class AuthLocalDatasource {
     required int userId,
     required String userName,
     required String userEmail,
+    String? userImagePath,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('is_logged_in', true);
     await prefs.setInt('user_id', userId);
     await prefs.setString('user_name', userName);
     await prefs.setString('user_email', userEmail);
+    if (userImagePath != null && userImagePath.isNotEmpty) {
+      await prefs.setString('user_image_path', userImagePath);
+    } else {
+      await prefs.remove('user_image_path');
+    }
   }
 
   Future<bool> isLoggedIn() async {
@@ -33,12 +39,18 @@ class AuthLocalDatasource {
     return prefs.getString('user_email');
   }
 
+  Future<String?> getUserImagePath() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('user_image_path');
+  }
+
   Future<void> clearSession() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('is_logged_in');
     await prefs.remove('user_id');
     await prefs.remove('user_name');
     await prefs.remove('user_email');
+    await prefs.remove('user_image_path');
   }
 
   Future<bool> isFirstTime() async {

@@ -2,7 +2,7 @@ name: flutter_kendaraanku_app
 description: "MotoVault — Smart Vehicle & Garage Ledger. Aplikasi pencatatan kendaraan pribadi 100% offline: BBM, servis, dokumen kendaraan, scan nota OCR, dan laporan ekspor PDF/CSV."
 publish_to: 'none'
 
-version: 1.1.0+2
+version: 1.2.0+3
 
 environment:
   sdk: ^3.7.0

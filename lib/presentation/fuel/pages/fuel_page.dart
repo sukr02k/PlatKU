@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_kendaraanku_app/core/components/vehicle_switcher_bar.dart';
 import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
 import 'package:flutter_kendaraanku_app/core/utils/formatters.dart';
+import 'package:flutter_kendaraanku_app/core/utils/image_helper.dart';
 import 'package:flutter_kendaraanku_app/data/models/fuel_log_model.dart';
 import 'package:flutter_kendaraanku_app/data/repositories/fuel_log_repository.dart';
 import 'package:flutter_kendaraanku_app/presentation/blocs/fuel_log/fuel_log_bloc.dart';
@@ -138,9 +139,25 @@ class FuelPage extends StatelessWidget {
   }
 }
 
-class _FuelPageContent extends StatelessWidget {
+class _FuelPageContent extends StatefulWidget {
   final int vehicleId;
   const _FuelPageContent({required this.vehicleId});
+
+  @override
+  State<_FuelPageContent> createState() => _FuelPageContentState();
+}
+
+class _FuelPageContentState extends State<_FuelPageContent> {
+  final TextEditingController _searchCtrl = TextEditingController();
+  String _searchQuery = '';
+
+  int get vehicleId => widget.vehicleId;
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -191,23 +208,35 @@ class _FuelPageContent extends StatelessWidget {
                 if (state.logs.isEmpty) {
                   return _buildEmptyState(context);
                 }
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.only(bottom: 140),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(height: MediaQuery.of(context).padding.top),
-                      _buildAppBar(context),
-                      const VehicleSwitcherBar(),
-                      const SizedBox(height: 4),
-                      _buildSummaryCard(state.stats),
-                      if (state.stats.monthlyData.isNotEmpty)
-                        _buildBarChartCard(state.stats.monthlyData),
-                      _buildHistoryHeader(),
-                      const SizedBox(height: 10),
-                      _buildFuelHistoryList(context, state.logs),
-                      const SizedBox(height: 20),
-                    ],
+                return RefreshIndicator(
+                  color: AppColors.primary,
+                  onRefresh: () async {
+                    context.read<FuelLogBloc>().add(LoadFuelLogs(vehicleId));
+                    final vehicleBloc = context.read<VehicleBloc?>();
+                    final vState = vehicleBloc?.state;
+                    if (vState is VehicleLoaded && vState.selectedVehicle != null) {
+                      vehicleBloc?.add(LoadVehicles(vState.selectedVehicle!.userId));
+                    }
+                  },
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.only(bottom: 140),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: MediaQuery.of(context).padding.top),
+                        _buildAppBar(context),
+                        const VehicleSwitcherBar(),
+                        const SizedBox(height: 4),
+                        _buildSummaryCard(state.stats),
+                        if (state.stats.monthlyData.isNotEmpty)
+                          _buildBarChartCard(state.stats.monthlyData),
+                        _buildHistoryHeader(),
+                        const SizedBox(height: 10),
+                        _buildFuelHistoryList(context, state.logs),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
                   ),
                 );
               }
@@ -248,10 +277,21 @@ class _FuelPageContent extends StatelessWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
-        child: Column(
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: () async {
+        context.read<FuelLogBloc>().add(LoadFuelLogs(vehicleId));
+        final vehicleBloc = context.read<VehicleBloc?>();
+        final vState = vehicleBloc?.state;
+        if (vState is VehicleLoaded && vState.selectedVehicle != null) {
+          vehicleBloc?.add(LoadVehicles(vState.selectedVehicle!.userId));
+        }
+      },
+      child: Center(
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
@@ -348,8 +388,9 @@ class _FuelPageContent extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildAppBar(BuildContext context) {
     final canPop = Navigator.canPop(context);
@@ -669,13 +710,62 @@ class _FuelPageContent extends StatelessWidget {
   Widget _buildHistoryHeader() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
-      child: Text(
-        'Riwayat Pengisian',
-        style: GoogleFonts.plusJakartaSans(
-          fontSize: 15,
-          fontWeight: FontWeight.w700,
-          color: AppColors.text,
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Riwayat Pengisian',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: AppColors.text,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Container(
+            height: 42,
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: TextField(
+              controller: _searchCtrl,
+              onChanged: (v) => setState(() => _searchQuery = v.trim()),
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 13,
+                color: AppColors.text,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Cari SPBU, jenis BBM, atau catatan...',
+                hintStyle: GoogleFonts.plusJakartaSans(
+                  fontSize: 12.5,
+                  color: AppColors.textMuted,
+                ),
+                prefixIcon: Icon(
+                  Icons.search_rounded,
+                  size: 19,
+                  color: AppColors.textMuted,
+                ),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? GestureDetector(
+                        onTap: () {
+                          _searchCtrl.clear();
+                          setState(() => _searchQuery = '');
+                        },
+                        child: Icon(
+                          Icons.close_rounded,
+                          size: 18,
+                          color: AppColors.textMuted,
+                        ),
+                      )
+                    : null,
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(vertical: 10),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -693,10 +783,40 @@ class _FuelPageContent extends StatelessWidget {
       prevLogMap[ascending[i].id] = ascending[i - 1];
     }
 
+    final q = _searchQuery.toLowerCase();
+    final filtered = q.isEmpty
+        ? sorted
+        : sorted.where((l) {
+            final station = (l.stationName ?? '').toLowerCase();
+            final notes = (l.notes ?? '').toLowerCase();
+            final dateStr = Formatters.date(l.date).toLowerCase();
+            return l.fuelType.toLowerCase().contains(q) ||
+                station.contains(q) ||
+                notes.contains(q) ||
+                dateStr.contains(q);
+          }).toList();
+
+    if (filtered.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+        child: Center(
+          child: Text(
+            'Tidak ada catatan BBM yang cocok dengan "$_searchQuery"',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textMuted,
+            ),
+          ),
+        ),
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
-        children: sorted
+        children: filtered
             .map((log) => Padding(
                   padding: const EdgeInsets.only(bottom: 10),
                   child: _buildFuelCard(context, log, prevLogMap[log.id]),
@@ -756,8 +876,9 @@ class _FuelPageContent extends StatelessWidget {
       BuildContext context, FuelLogModel log, FuelLogModel? prevLog) {
     // Calculate distance and consumption
     final distance = prevLog != null ? log.odometer - prevLog.odometer : 0.0;
-    final consumptionVal =
-        (distance > 0 && log.liters > 0) ? distance / log.liters : 0.0;
+    final consumptionVal = (log.isFullTank && distance > 0 && log.liters > 0)
+        ? distance / log.liters
+        : 0.0;
 
     return Material(
       color: Colors.transparent,
@@ -765,122 +886,159 @@ class _FuelPageContent extends StatelessWidget {
         onTap: () => _showFuelDetail(context, log),
         borderRadius: BorderRadius.circular(20),
         child: Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
             children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: AppColors.tintPeachBg,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.local_gas_station_rounded,
-                  color: AppColors.tintPeachFg,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: AppColors.tintPeachBg,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.local_gas_station_rounded,
+                      color: AppColors.tintPeachFg,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: Text(
-                            log.stationName ?? 'SPBU',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.text,
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      log.stationName ?? 'SPBU',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 13.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.text,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: log.isFullTank
+                                          ? AppColors.tintMintBg
+                                          : AppColors.tintAmberBg,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      log.isFullTank ? 'Full' : 'Parsial',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 9.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: log.isFullTank
+                                            ? AppColors.tintMintFg
+                                            : AppColors.tintAmberFg,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
+                            const SizedBox(width: 6),
+                            Text(
+                              '-${Formatters.currency(log.totalCost)}',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.text,
+                              ),
+                            ),
+                          ],
                         ),
-                        Text(
-                          '-${Formatters.currency(log.totalCost)}',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.text,
-                          ),
+                        const SizedBox(height: 2),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                '${log.fuelType} · ${Formatters.date(log.date)}',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.textMuted,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              '${Formatters.liters(log.liters)} · ${Formatters.currency(log.pricePerLiter)}/L',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.textMuted,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            '${log.fuelType} · ${Formatters.date(log.date)}',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.textMuted,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          '${Formatters.liters(log.liters)} · ${Formatters.currency(log.pricePerLiter)}/L',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.textMuted,
-                          ),
-                        ),
-                      ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.surface2,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _buildDetailItem(
+                        'ODOMETER',
+                        Formatters.odometer(log.odometer),
+                        null,
+                      ),
+                    ),
+                    Expanded(
+                      child: _buildDetailItem(
+                        'JARAK',
+                        distance > 0 ? Formatters.odometer(distance) : '-',
+                        null,
+                      ),
+                    ),
+                    Expanded(
+                      child: _buildDetailItem(
+                        'KONSUMSI',
+                        !log.isFullTank
+                            ? 'Parsial'
+                            : (consumptionVal > 0
+                                ? Formatters.consumption(consumptionVal)
+                                : '-'),
+                        !log.isFullTank
+                            ? AppColors.tintAmberFg
+                            : (consumptionVal > 0 ? AppColors.success : null),
+                      ),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppColors.surface2,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _buildDetailItem(
-                    'ODOMETER',
-                    Formatters.odometer(log.odometer),
-                    null,
-                  ),
-                ),
-                Expanded(
-                  child: _buildDetailItem(
-                    'JARAK',
-                    distance > 0 ? Formatters.odometer(distance) : '-',
-                    null,
-                  ),
-                ),
-                Expanded(
-                  child: _buildDetailItem(
-                    'KONSUMSI',
-                    consumptionVal > 0
-                        ? Formatters.consumption(consumptionVal)
-                        : '-',
-                    consumptionVal > 0 ? AppColors.success : null,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
         ),
       ),
     );
@@ -1120,13 +1278,50 @@ class FuelLogDetailSheet extends StatelessWidget {
               ],
               if (log.receiptImagePath != null) ...[
                 const SizedBox(height: 14),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.file(
-                    File(log.receiptImagePath!),
-                    height: 160,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
+                GestureDetector(
+                  onTap: () => ImageHelper.showFullScreenImage(
+                    context,
+                    file: File(log.receiptImagePath!),
+                    title: 'Struk Pengisian BBM · ${log.fuelType}',
+                  ),
+                  child: Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.file(
+                          File(log.receiptImagePath!),
+                          height: 160,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Container(
+                        margin: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.65),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.zoom_in_rounded,
+                                color: Colors.white, size: 14),
+                            SizedBox(width: 4),
+                            Text(
+                              'Perbesar',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],

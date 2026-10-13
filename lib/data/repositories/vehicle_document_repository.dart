@@ -12,7 +12,7 @@ class VehicleDocumentRepository {
       final results = await db.rawQuery('''
         SELECT vd.* FROM vehicle_documents vd
         INNER JOIN vehicles v ON vd.vehicle_id = v.id
-        WHERE v.user_id = ?
+        WHERE v.user_id = ? AND v.is_active = 1
         ORDER BY
           CASE WHEN vd.expiry_date IS NULL THEN 1 ELSE 0 END,
           vd.expiry_date ASC

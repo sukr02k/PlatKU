@@ -94,21 +94,32 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   }
 
   double _calculateAvgConsumption(List<FuelLogModel> logs) {
-    final fullTankLogs = logs.where((l) => l.isFullTank).toList()
+    final sortedByDate = List<FuelLogModel>.from(logs)
       ..sort((a, b) => a.date.compareTo(b.date));
 
-    if (fullTankLogs.length < 2) return 0;
+    double totalDistance = 0;
+    double totalFullTankLiters = 0;
+    FuelLogModel? lastFullTank;
+    double pendingLiters = 0;
 
-    double totalKm = 0;
-    double totalLiters = 0;
-    for (int i = 1; i < fullTankLogs.length; i++) {
-      final km = fullTankLogs[i].odometer - fullTankLogs[i - 1].odometer;
-      if (km > 0) {
-        totalKm += km;
-        totalLiters += fullTankLogs[i].liters;
+    for (final log in sortedByDate) {
+      if (log.isFullTank) {
+        if (lastFullTank != null) {
+          final dist = log.odometer - lastFullTank.odometer;
+          final litersUsed = pendingLiters + log.liters;
+          if (dist > 0 && litersUsed > 0) {
+            totalDistance += dist;
+            totalFullTankLiters += litersUsed;
+          }
+        }
+        lastFullTank = log;
+        pendingLiters = 0;
+      } else if (lastFullTank != null) {
+        pendingLiters += log.liters;
       }
     }
-    return totalLiters > 0 ? totalKm / totalLiters : 0;
+
+    return totalFullTankLiters > 0 ? totalDistance / totalFullTankLiters : 0;
   }
 
   List<ActivityItem> _buildRecentActivities(
@@ -145,7 +156,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     }
 
     activities.sort((a, b) => b.date.compareTo(a.date));
-    return activities.take(5).toList();
+    return activities.take(25).toList();
   }
 
   List<ReminderItem> _buildReminders(

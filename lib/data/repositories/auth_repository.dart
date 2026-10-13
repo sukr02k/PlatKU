@@ -103,6 +103,18 @@ class AuthRepository {
   Future<Either<String, bool>> updateUser(UserModel user) async {
     try {
       final db = await _dbHelper.database;
+      // Check if email is already taken by another user
+      if (user.id != null) {
+        final existingEmail = await db.query(
+          'users',
+          where: 'email = ? AND id != ?',
+          whereArgs: [user.email, user.id],
+        );
+        if (existingEmail.isNotEmpty) {
+          return const Left('Email sudah digunakan oleh akun lain');
+        }
+      }
+
       final securedUser = user.copyWith(
         password: PasswordHasher.hash(user.password),
         updatedAt: DateTime.now(),
@@ -115,6 +127,9 @@ class AuthRepository {
       );
       return const Right(true);
     } catch (e) {
+      if (e.toString().contains('UNIQUE constraint failed')) {
+        return const Left('Email sudah digunakan oleh akun lain');
+      }
       return Left('Gagal update: $e');
     }
   }

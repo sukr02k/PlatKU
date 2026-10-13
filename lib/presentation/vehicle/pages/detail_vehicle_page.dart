@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -5,8 +6,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
 import 'package:flutter_kendaraanku_app/core/constants/app_styles.dart';
 import 'package:flutter_kendaraanku_app/core/utils/formatters.dart';
+import 'package:flutter_kendaraanku_app/core/utils/image_helper.dart';
 import 'package:flutter_kendaraanku_app/data/models/vehicle_model.dart';
 import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_bloc.dart';
+import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_event.dart';
 import 'package:flutter_kendaraanku_app/presentation/vehicle/pages/edit_vehicle_page.dart';
 import 'package:flutter_kendaraanku_app/presentation/service/pages/service_page.dart';
 import 'package:flutter_kendaraanku_app/presentation/fuel/pages/fuel_page.dart';
@@ -14,6 +17,7 @@ import 'package:flutter_kendaraanku_app/presentation/settings/pages/export_page.
 import 'package:flutter_kendaraanku_app/data/repositories/service_log_repository.dart';
 import 'package:flutter_kendaraanku_app/data/repositories/fuel_log_repository.dart';
 import 'package:flutter_kendaraanku_app/data/repositories/vehicle_document_repository.dart';
+import 'package:flutter_kendaraanku_app/data/repositories/vehicle_repository.dart';
 import 'package:flutter_kendaraanku_app/data/models/service_log_model.dart';
 import 'package:flutter_kendaraanku_app/data/models/fuel_log_model.dart';
 import 'package:flutter_kendaraanku_app/data/models/vehicle_document_model.dart';
@@ -28,39 +32,60 @@ class DetailVehiclePage extends StatefulWidget {
 }
 
 class _DetailVehiclePageState extends State<DetailVehiclePage> {
+  late VehicleModel _vehicle;
+  bool _wasEdited = false;
   int _activeTabIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _vehicle = widget.vehicle;
+  }
+
+  void _onBack() {
+    Navigator.pop(context, _wasEdited);
+  }
 
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
-      child: Scaffold(
-        backgroundColor: AppColors.bg,
-        body: SingleChildScrollView(
-          child: Column(
-            children: [
-              _HeroHeader(
-                vehicle: widget.vehicle,
-                onEdit: _navigateToEdit,
-              ),
-              const SizedBox(height: 18),
-              _StatsGrid(vehicle: widget.vehicle),
-              const SizedBox(height: 20),
-              _TabBar(
-                activeIndex: _activeTabIndex,
-                onTap: (index) => setState(() => _activeTabIndex = index),
-              ),
-              const SizedBox(height: 16),
-              if (_activeTabIndex == 0)
-                _SpesifikasiCard(vehicle: widget.vehicle)
-              else if (_activeTabIndex == 1)
-                _ServisTab(vehicle: widget.vehicle)
-              else
-                _DokumenTab(vehicle: widget.vehicle),
-              const SizedBox(height: 16),
-              _ActionButtonsRow(vehicle: widget.vehicle),
-              const SizedBox(height: 32),
-            ],
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) return;
+          _onBack();
+        },
+        child: Scaffold(
+          backgroundColor: AppColors.bg,
+          body: SingleChildScrollView(
+            child: Column(
+              children: [
+                _HeroHeader(
+                  vehicle: _vehicle,
+                  onBack: _onBack,
+                  onEdit: _navigateToEdit,
+                  onDelete: _confirmDelete,
+                ),
+                const SizedBox(height: 18),
+                _StatsGrid(vehicle: _vehicle),
+                const SizedBox(height: 20),
+                _TabBar(
+                  activeIndex: _activeTabIndex,
+                  onTap: (index) => setState(() => _activeTabIndex = index),
+                ),
+                const SizedBox(height: 16),
+                if (_activeTabIndex == 0)
+                  _SpesifikasiCard(vehicle: _vehicle)
+                else if (_activeTabIndex == 1)
+                  _ServisTab(vehicle: _vehicle)
+                else
+                  _DokumenTab(vehicle: _vehicle),
+                const SizedBox(height: 16),
+                _ActionButtonsRow(vehicle: _vehicle),
+                const SizedBox(height: 32),
+              ],
+            ),
           ),
         ),
       ),
@@ -74,11 +99,73 @@ class _DetailVehiclePageState extends State<DetailVehiclePage> {
       MaterialPageRoute(
         builder: (_) => BlocProvider.value(
           value: vehicleBloc,
-          child: EditVehiclePage(vehicle: widget.vehicle),
+          child: EditVehiclePage(vehicle: _vehicle),
         ),
       ),
     );
     if (result == true && mounted) {
+      _wasEdited = true;
+      vehicleBloc.add(LoadVehicles(_vehicle.userId));
+      if (_vehicle.id != null) {
+        final res = await VehicleRepository().getById(_vehicle.id!);
+        res.fold((_) => null, (updated) {
+          if (mounted) {
+            setState(() => _vehicle = updated);
+          }
+        });
+      }
+    }
+  }
+
+  Future<void> _confirmDelete() async {
+    final v = widget.vehicle;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Text(
+          'Hapus Kendaraan?',
+          style: GoogleFonts.plusJakartaSans(
+            fontWeight: FontWeight.w700,
+            color: AppColors.text,
+          ),
+        ),
+        content: Text(
+          'Kendaraan "${v.brand} ${v.model} (${v.plateNumber})" beserta seluruh riwayat BBM, servis, dan dokumennya akan dihapus permanen.',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 13,
+            color: AppColors.textMuted,
+            height: 1.45,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              'Batal',
+              style: GoogleFonts.plusJakartaSans(
+                color: AppColors.textSoft,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              'Ya, Hapus',
+              style: GoogleFonts.plusJakartaSans(
+                color: AppColors.danger,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted && v.id != null) {
+      context.read<VehicleBloc>().add(ArchiveVehicle(v.id!));
       Navigator.pop(context, true);
     }
   }
@@ -87,9 +174,16 @@ class _DetailVehiclePageState extends State<DetailVehiclePage> {
 // ─── Hero Header ───────────────────────────────────────────────────────────────
 class _HeroHeader extends StatelessWidget {
   final VehicleModel vehicle;
+  final VoidCallback onBack;
   final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
-  const _HeroHeader({required this.vehicle, required this.onEdit});
+  const _HeroHeader({
+    required this.vehicle,
+    required this.onBack,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
   IconData _vehicleIcon() {
     switch (vehicle.type) {
@@ -124,7 +218,7 @@ class _HeroHeader extends StatelessWidget {
               children: [
                 // Back button
                 GestureDetector(
-                  onTap: () => Navigator.pop(context),
+                  onTap: onBack,
                   child: Container(
                     width: 40,
                     height: 40,
@@ -172,15 +266,76 @@ class _HeroHeader extends StatelessWidget {
                     ),
                   ),
                 ),
+                const SizedBox(width: 8),
+                // Delete button
+                GestureDetector(
+                  onTap: onDelete,
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.delete_outline_rounded,
+                        size: 19,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 20),
-            // Car icon
-            Icon(
-              _vehicleIcon(),
-              size: 150,
-              color: Colors.white.withValues(alpha: 0.9),
-            ),
+            // Vehicle photo or icon
+            if (vehicle.imagePath != null &&
+                vehicle.imagePath!.isNotEmpty &&
+                File(vehicle.imagePath!).existsSync())
+              GestureDetector(
+                onTap: () => ImageHelper.showFullScreenImage(
+                  context,
+                  file: File(vehicle.imagePath!),
+                  title: '${vehicle.brand} ${vehicle.model} (${vehicle.plateNumber})',
+                ),
+                child: Container(
+                  width: 220,
+                  height: 145,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.45),
+                      width: 2.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(17.5),
+                    child: Image.file(
+                      File(vehicle.imagePath!),
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => Icon(
+                        _vehicleIcon(),
+                        size: 110,
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
+                  ),
+                ),
+              )
+            else
+              Icon(
+                _vehicleIcon(),
+                size: 150,
+                color: Colors.white.withValues(alpha: 0.9),
+              ),
             const SizedBox(height: 12),
             // Plate badge
             Container(
@@ -986,6 +1141,22 @@ class _DokumenTab extends StatelessWidget {
                     amount: doc.daysUntilExpiry != null
                         ? '${doc.daysUntilExpiry} hr'
                         : 'Aktif',
+                    hasPhoto: doc.imagePath != null && doc.imagePath!.isNotEmpty,
+                    onTap: () => _showAttachmentPreview(
+                      context,
+                      title: doc.documentNumber != null &&
+                              doc.documentNumber!.isNotEmpty
+                          ? '${doc.documentType} · ${doc.documentNumber}'
+                          : doc.documentType,
+                      subtitle: doc.expiryDate != null
+                          ? 'Berlaku s/d ${Formatters.date(doc.expiryDate!)}'
+                          : 'Dokumen Permanen',
+                      badge: doc.daysUntilExpiry != null
+                          ? '${doc.daysUntilExpiry} hari lagi'
+                          : 'Aktif',
+                      notes: doc.notes,
+                      imagePath: doc.imagePath,
+                    ),
                   ),
                 )),
                 ...fuelWithPhotos.map((log) => Padding(
@@ -997,6 +1168,17 @@ class _DokumenTab extends StatelessWidget {
                     title: 'Nota BBM - ${log.fuelType}',
                     subtitle: Formatters.date(log.date),
                     amount: Formatters.currency(log.totalCost),
+                    hasPhoto: log.receiptImagePath != null &&
+                        log.receiptImagePath!.isNotEmpty,
+                    onTap: () => _showAttachmentPreview(
+                      context,
+                      title: 'Nota BBM · ${log.fuelType}',
+                      subtitle:
+                          '${Formatters.date(log.date)} · ${log.liters.toStringAsFixed(2)} L · ${Formatters.odometer(log.odometer)}',
+                      badge: Formatters.currency(log.totalCost),
+                      notes: log.notes,
+                      imagePath: log.receiptImagePath,
+                    ),
                   ),
                 )),
                 ...serviceWithPhotos.map((log) => Padding(
@@ -1008,6 +1190,17 @@ class _DokumenTab extends StatelessWidget {
                     title: 'Nota Servis - ${log.description}',
                     subtitle: Formatters.date(log.date),
                     amount: Formatters.currency(log.cost),
+                    hasPhoto: log.receiptImagePath != null &&
+                        log.receiptImagePath!.isNotEmpty,
+                    onTap: () => _showAttachmentPreview(
+                      context,
+                      title: 'Nota Servis · ${log.serviceType}',
+                      subtitle:
+                          '${Formatters.date(log.date)} · ${log.workshopName ?? '-'}',
+                      badge: Formatters.currency(log.cost),
+                      notes: log.description,
+                      imagePath: log.receiptImagePath,
+                    ),
                   ),
                 )),
               ],
@@ -1015,6 +1208,157 @@ class _DokumenTab extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  void _showAttachmentPreview(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required String badge,
+    String? notes,
+    String? imagePath,
+  }) {
+    final hasFile =
+        imagePath != null && imagePath.isNotEmpty && File(imagePath).existsSync();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.text,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          subtitle,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primarySoft,
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                    child: Text(
+                      badge,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (notes != null && notes.trim().isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface2,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Text(
+                    notes,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12.5,
+                      color: AppColors.text,
+                      height: 1.45,
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 14),
+              if (hasFile)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(ctx).size.height * 0.5,
+                    ),
+                    child: InteractiveViewer(
+                      child: Image.file(
+                        File(imagePath),
+                        width: double.infinity,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                )
+              else
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 28),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface2,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.image_not_supported_outlined,
+                        size: 28,
+                        color: AppColors.textSoft,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Belum ada foto lampiran untuk dokumen ini',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -1026,6 +1370,8 @@ class _DocPhotoCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final String amount;
+  final bool hasPhoto;
+  final VoidCallback? onTap;
 
   const _DocPhotoCard({
     required this.iconBg,
@@ -1034,74 +1380,80 @@ class _DocPhotoCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.amount,
+    this.hasPhoto = false,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppStyles.rLg),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: iconBg,
-              borderRadius: BorderRadius.circular(12),
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppStyles.rLg),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, size: 20, color: iconColor),
             ),
-            child: Icon(icon, size: 20, color: iconColor),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.text,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  title,
+                  amount,
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
                     color: AppColors.text,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11,
-                    color: AppColors.textMuted,
-                  ),
+                const SizedBox(width: 6),
+                Icon(
+                  hasPhoto ? Icons.camera_alt : Icons.chevron_right_rounded,
+                  size: hasPhoto ? 14 : 18,
+                  color: hasPhoto ? AppColors.tintBlueFg : AppColors.textSoft,
                 ),
               ],
             ),
-          ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                amount,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.text,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Icon(
-                Icons.camera_alt,
-                size: 14,
-                color: AppColors.tintBlueFg,
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -99,7 +99,7 @@ class AboutPage extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            'Versi 1.1.0 · Smart Vehicle & Garage Ledger',
+            'Versi 1.2.0 · Smart Vehicle & Garage Ledger',
             textAlign: TextAlign.center,
             style: GoogleFonts.plusJakartaSans(
               fontSize: 12,

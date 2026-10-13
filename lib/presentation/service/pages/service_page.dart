@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_kendaraanku_app/core/components/vehicle_switcher_bar.dart';
 import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
 import 'package:flutter_kendaraanku_app/core/utils/formatters.dart';
+import 'package:flutter_kendaraanku_app/core/utils/image_helper.dart';
 import 'package:flutter_kendaraanku_app/data/models/service_log_model.dart';
 import 'package:flutter_kendaraanku_app/data/repositories/service_log_repository.dart';
 import 'package:flutter_kendaraanku_app/presentation/blocs/service_log/service_log_bloc.dart';
@@ -165,9 +166,25 @@ class _NoVehicleEmpty extends StatelessWidget {
   }
 }
 
-class _ServicePageContent extends StatelessWidget {
+class _ServicePageContent extends StatefulWidget {
   final int vehicleId;
   const _ServicePageContent({required this.vehicleId});
+
+  @override
+  State<_ServicePageContent> createState() => _ServicePageContentState();
+}
+
+class _ServicePageContentState extends State<_ServicePageContent> {
+  final TextEditingController _searchCtrl = TextEditingController();
+  String _searchQuery = '';
+
+  int get vehicleId => widget.vehicleId;
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -218,20 +235,33 @@ class _ServicePageContent extends StatelessWidget {
                 if (state.logs.isEmpty && state.activeFilter == null) {
                   return _buildEmptyState(context);
                 }
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.only(bottom: 140),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(height: MediaQuery.of(context).padding.top),
-                      _buildAppBar(context),
-                      const VehicleSwitcherBar(),
-                      const SizedBox(height: 4),
-                      _buildSummaryHeroCard(state.stats),
-                      _buildFilterChips(context, state.stats, state.activeFilter),
-                      _buildTimelineList(context, state.logs),
-                      const SizedBox(height: 20),
-                    ],
+                return RefreshIndicator(
+                  color: AppColors.primary,
+                  onRefresh: () async {
+                    context.read<ServiceLogBloc>().add(LoadServiceLogs(vehicleId));
+                    final vehicleBloc = context.read<VehicleBloc?>();
+                    final vState = vehicleBloc?.state;
+                    if (vState is VehicleLoaded && vState.selectedVehicle != null) {
+                      vehicleBloc?.add(LoadVehicles(vState.selectedVehicle!.userId));
+                    }
+                  },
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.only(bottom: 140),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: MediaQuery.of(context).padding.top),
+                        _buildAppBar(context),
+                        const VehicleSwitcherBar(),
+                        const SizedBox(height: 4),
+                        _buildSummaryHeroCard(state.stats),
+                        _buildSearchBar(),
+                        _buildFilterChips(context, state.stats, state.activeFilter),
+                        _buildTimelineList(context, state.logs),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
                   ),
                 );
               }
@@ -272,10 +302,21 @@ class _ServicePageContent extends StatelessWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
-        child: Column(
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: () async {
+        context.read<ServiceLogBloc>().add(LoadServiceLogs(vehicleId));
+        final vehicleBloc = context.read<VehicleBloc?>();
+        final vState = vehicleBloc?.state;
+        if (vState is VehicleLoaded && vState.selectedVehicle != null) {
+          vehicleBloc?.add(LoadVehicles(vState.selectedVehicle!.userId));
+        }
+      },
+      child: Center(
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
@@ -412,8 +453,9 @@ class _ServicePageContent extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildAppBar(BuildContext context) {
     final canPop = Navigator.canPop(context);
@@ -602,6 +644,55 @@ class _ServicePageContent extends StatelessWidget {
     );
   }
 
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+      child: Container(
+        height: 42,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: TextField(
+          controller: _searchCtrl,
+          onChanged: (v) => setState(() => _searchQuery = v.trim()),
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 13,
+            color: AppColors.text,
+          ),
+          decoration: InputDecoration(
+            hintText: 'Cari bengkel, deskripsi, atau jenis servis...',
+            hintStyle: GoogleFonts.plusJakartaSans(
+              fontSize: 12.5,
+              color: AppColors.textMuted,
+            ),
+            prefixIcon: Icon(
+              Icons.search_rounded,
+              size: 19,
+              color: AppColors.textMuted,
+            ),
+            suffixIcon: _searchQuery.isNotEmpty
+                ? GestureDetector(
+                    onTap: () {
+                      _searchCtrl.clear();
+                      setState(() => _searchQuery = '');
+                    },
+                    child: Icon(
+                      Icons.close_rounded,
+                      size: 18,
+                      color: AppColors.textMuted,
+                    ),
+                  )
+                : null,
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(vertical: 10),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildFilterChips(
     BuildContext context,
     ServiceStats stats,
@@ -687,12 +778,29 @@ class _ServicePageContent extends StatelessWidget {
   }
 
   Widget _buildTimelineList(BuildContext context, List<ServiceLogModel> logs) {
-    if (logs.isEmpty) {
+    final q = _searchQuery.toLowerCase();
+    final filtered = q.isEmpty
+        ? logs
+        : logs.where((l) {
+            final workshop = (l.workshopName ?? '').toLowerCase();
+            final notes = (l.notes ?? '').toLowerCase();
+            final dateStr = Formatters.date(l.date).toLowerCase();
+            return l.description.toLowerCase().contains(q) ||
+                l.serviceType.toLowerCase().contains(q) ||
+                workshop.contains(q) ||
+                notes.contains(q) ||
+                dateStr.contains(q);
+          }).toList();
+
+    if (filtered.isEmpty) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
         child: Center(
           child: Text(
-            'Tidak ada catatan untuk filter ini',
+            q.isNotEmpty
+                ? 'Tidak ada catatan servis yang cocok dengan "$_searchQuery"'
+                : 'Tidak ada catatan untuk filter ini',
+            textAlign: TextAlign.center,
             style: GoogleFonts.plusJakartaSans(
               fontSize: 13,
               fontWeight: FontWeight.w500,
@@ -704,7 +812,7 @@ class _ServicePageContent extends StatelessWidget {
     }
 
     // Sort by date descending
-    final sorted = List<ServiceLogModel>.from(logs)
+    final sorted = List<ServiceLogModel>.from(filtered)
       ..sort((a, b) => b.date.compareTo(a.date));
 
     // Group by month
@@ -1211,13 +1319,50 @@ class ServiceLogDetailSheet extends StatelessWidget {
                 ],
                 if (log.receiptImagePath != null) ...[
                   const SizedBox(height: 14),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.file(
-                      File(log.receiptImagePath!),
-                      height: 160,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
+                  GestureDetector(
+                    onTap: () => ImageHelper.showFullScreenImage(
+                      context,
+                      file: File(log.receiptImagePath!),
+                      title: 'Struk Servis · ${log.serviceType}',
+                    ),
+                    child: Stack(
+                      alignment: Alignment.bottomRight,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.file(
+                            File(log.receiptImagePath!),
+                            height: 160,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        Container(
+                          margin: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.65),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.zoom_in_rounded,
+                                  color: Colors.white, size: 14),
+                              SizedBox(width: 4),
+                              Text(
+                                'Perbesar',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

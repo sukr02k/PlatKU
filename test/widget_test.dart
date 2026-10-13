@@ -8,7 +8,9 @@ import 'package:flutter_kendaraanku_app/core/theme_controller.dart';
 import 'package:flutter_kendaraanku_app/core/utils/formatters.dart';
 import 'package:flutter_kendaraanku_app/core/utils/password_hasher.dart';
 import 'package:flutter_kendaraanku_app/core/utils/receipt_parser.dart';
+import 'package:flutter_kendaraanku_app/data/models/user_model.dart';
 import 'package:flutter_kendaraanku_app/data/models/vehicle_document_model.dart';
+import 'package:flutter_kendaraanku_app/data/models/vehicle_model.dart';
 
 void main() {
   setUpAll(() async {
@@ -18,9 +20,11 @@ void main() {
   });
 
   group('MotoVault Brand & ThemeController', () {
-    test('AppStrings exposes MotoVault brand identity', () {
+    test('AppStrings exposes MotoVault brand identity and v1.2.0 version', () {
       expect(AppStrings.appName, 'MotoVault');
       expect(AppStrings.appTagline, 'Smart Vehicle & Garage Ledger');
+      expect(AppStrings.appVersion, 'v1.2.0');
+      expect(AppStrings.appBuild, 'Build 3');
     });
 
     test('ThemeController switches between light, dark, and system modes',
@@ -123,4 +127,85 @@ TOTAL BAYAR: Rp 245.000
       expect(expiredDoc.isExpiringSoon, isFalse);
     });
   });
+
+  group('UserModel Profile & Avatar Serialization', () {
+    test('Correctly serializes, deserializes, and copies user imagePath', () {
+      final now = DateTime.now();
+      final user = UserModel(
+        id: 1,
+        name: 'Abdan Syakuro',
+        email: 'abdan@motovault.id',
+        password: 'hashedpassword',
+        imagePath: '/data/user/avatar.jpg',
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      final map = user.toMap();
+      expect(map['image_path'], '/data/user/avatar.jpg');
+      expect(map['name'], 'Abdan Syakuro');
+      expect(map['email'], 'abdan@motovault.id');
+
+      final deserialized = UserModel.fromMap(map);
+      expect(deserialized.imagePath, '/data/user/avatar.jpg');
+      expect(deserialized.name, 'Abdan Syakuro');
+
+      final updated = user.copyWith(imagePath: '/data/user/new_avatar.jpg');
+      expect(updated.imagePath, '/data/user/new_avatar.jpg');
+      expect(updated.name, 'Abdan Syakuro');
+    });
+  });
+
+  group('VehicleModel Garage Entity & Photo Serialization', () {
+    test('Correctly serializes, deserializes, and copies vehicle model with imagePath', () {
+      final now = DateTime.now();
+      final vehicle = VehicleModel(
+        id: 42,
+        userId: 1,
+        name: 'Vario Kesayangan',
+        type: 'motor',
+        brand: 'Honda',
+        model: 'Vario 160',
+        year: 2024,
+        plateNumber: 'B 1234 XYZ',
+        color: 'Matte Black',
+        imagePath: '/data/user/0/app/app_flutter/vario.jpg',
+        initialOdometer: 12500.0,
+        fuelType: 'Pertamax',
+        tankCapacity: 5.5,
+        isActive: true,
+        notes: 'Motor harian kantor',
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      final map = vehicle.toMap();
+      expect(map['id'], 42);
+      expect(map['user_id'], 1);
+      expect(map['name'], 'Vario Kesayangan');
+      expect(map['brand'], 'Honda');
+      expect(map['plate_number'], 'B 1234 XYZ');
+      expect(map['image_path'], '/data/user/0/app/app_flutter/vario.jpg');
+      expect(map['tank_capacity'], 5.5);
+      expect(map['initial_odometer'], 12500.0);
+      expect(map['is_active'], 1);
+
+      final fromMap = VehicleModel.fromMap(map);
+      expect(fromMap.id, 42);
+      expect(fromMap.imagePath, '/data/user/0/app/app_flutter/vario.jpg');
+      expect(fromMap.tankCapacity, 5.5);
+      expect(fromMap.initialOdometer, 12500.0);
+      expect(fromMap.isActive, isTrue);
+
+      final updated = vehicle.copyWith(
+        imagePath: '/data/user/0/app/app_flutter/vario_updated.jpg',
+        isActive: false,
+      );
+      expect(updated.imagePath, '/data/user/0/app/app_flutter/vario_updated.jpg');
+      expect(updated.isActive, isFalse);
+      expect(updated.brand, 'Honda');
+      expect(updated.toMap()['is_active'], 0);
+    });
+  });
 }
+

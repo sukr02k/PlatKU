@@ -5,12 +5,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
+import 'package:flutter_kendaraanku_app/core/utils/image_helper.dart';
 import 'package:flutter_kendaraanku_app/data/local/auth_local_datasource.dart';
 import 'package:flutter_kendaraanku_app/data/models/vehicle_document_model.dart';
 import 'package:flutter_kendaraanku_app/data/models/vehicle_model.dart';
 import 'package:flutter_kendaraanku_app/data/repositories/vehicle_document_repository.dart';
 import 'package:flutter_kendaraanku_app/data/repositories/vehicle_repository.dart';
 import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_bloc.dart';
+import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_event.dart';
 import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle_document/vehicle_document_bloc.dart';
 import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle_document/vehicle_document_event.dart';
 import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle_document/vehicle_document_state.dart';
@@ -162,9 +164,11 @@ class _DocsContentState extends State<_DocsContent> {
     return docs.where((d) {
       final num = (d.documentNumber ?? '').toLowerCase();
       final notes = (d.notes ?? '').toLowerCase();
+      final vName = _vehicleName(d.vehicleId).toLowerCase();
       return d.documentType.toLowerCase().contains(q) ||
           num.contains(q) ||
-          notes.contains(q);
+          notes.contains(q) ||
+          vName.contains(q);
     }).toList();
   }
 
@@ -222,9 +226,25 @@ class _DocsContentState extends State<_DocsContent> {
                 children: [
                   _buildAppBar(context, 0, 0),
                   Expanded(
-                    child: _EmptyState(
-                      hasVehicles: widget.vehicles.isNotEmpty,
-                      onTapAdd: () => _openAddDocument(context),
+                    child: RefreshIndicator(
+                      color: AppColors.primary,
+                      onRefresh: () async {
+                        final userId = await AuthLocalDatasource().getUserId();
+                        if (userId != null && context.mounted) {
+                          context.read<VehicleDocumentBloc>().add(LoadDocuments(userId));
+                          context.read<VehicleBloc>().add(LoadVehicles(userId));
+                        }
+                      },
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.7,
+                          child: _EmptyState(
+                            hasVehicles: widget.vehicles.isNotEmpty,
+                            onTapAdd: () => _openAddDocument(context),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -242,33 +262,44 @@ class _DocsContentState extends State<_DocsContent> {
               children: [
                 _buildAppBar(context, totalCount, dueSoon),
                 Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.only(bottom: 120),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (loaded.mostUrgent != null)
-                          _UrgentBanner(
-                              doc: loaded.mostUrgent!,
-                              vehicleName: _vehicleName(
-                                  loaded.mostUrgent!.vehicleId)),
-                        _buildCategoryChips(context, loaded),
-                        if (visible.isEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 32),
-                            child: Center(
-                              child: Text(
-                                'Tidak ada dokumen untuk pencarian ini',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 13,
-                                  color: AppColors.textMuted,
+                  child: RefreshIndicator(
+                    color: AppColors.primary,
+                    onRefresh: () async {
+                      final userId = await AuthLocalDatasource().getUserId();
+                      if (userId != null && context.mounted) {
+                        context.read<VehicleDocumentBloc>().add(LoadDocuments(userId));
+                        context.read<VehicleBloc>().add(LoadVehicles(userId));
+                      }
+                    },
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.only(bottom: 120),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (loaded.mostUrgent != null)
+                            _UrgentBanner(
+                                doc: loaded.mostUrgent!,
+                                vehicleName: _vehicleName(
+                                    loaded.mostUrgent!.vehicleId)),
+                          _buildCategoryChips(context, loaded),
+                          if (visible.isEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 32),
+                              child: Center(
+                                child: Text(
+                                  'Tidak ada dokumen untuk pencarian ini',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 13,
+                                    color: AppColors.textMuted,
+                                  ),
                                 ),
                               ),
-                            ),
-                          )
-                        else
-                          _buildDocGrid(visible),
-                      ],
+                            )
+                          else
+                            _buildDocGrid(visible),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -1297,13 +1328,50 @@ class VehicleDocumentDetailSheet extends StatelessWidget {
                         letterSpacing: 0.4,
                       )),
                   const SizedBox(height: 8),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.file(
-                      File(doc.imagePath!),
-                      height: 200,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
+                  GestureDetector(
+                    onTap: () => ImageHelper.showFullScreenImage(
+                      context,
+                      file: File(doc.imagePath!),
+                      title: '${doc.documentType} · ${doc.documentNumber ?? ''}'.trim(),
+                    ),
+                    child: Stack(
+                      alignment: Alignment.bottomRight,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.file(
+                            File(doc.imagePath!),
+                            height: 200,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        Container(
+                          margin: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.65),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.zoom_in_rounded,
+                                  color: Colors.white, size: 14),
+                              SizedBox(width: 4),
+                              Text(
+                                'Perbesar',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

@@ -1,10 +1,13 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
 import 'package:flutter_kendaraanku_app/core/components/app_icon_button.dart';
 import 'package:flutter_kendaraanku_app/core/utils/formatters.dart';
+import 'package:flutter_kendaraanku_app/core/utils/image_helper.dart';
 import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_bloc.dart';
 import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_event.dart';
 import 'package:flutter_kendaraanku_app/data/models/vehicle_model.dart';
@@ -28,6 +31,7 @@ class _AddVehiclePageState extends State<AddVehiclePage> {
   final _colorController = TextEditingController();
   final _odometerController = TextEditingController();
 
+  String? _imagePath;
   int _selectedFuel = 0;
   String _selectedType = 'mobil'; // motor, mobil, lainnya
   String? _selectedBrand;
@@ -62,6 +66,113 @@ class _AddVehiclePageState extends State<AddVehiclePage> {
     super.dispose();
   }
 
+  Future<void> _pickPhoto() async {
+    final src = await showModalBottomSheet<ImageSource?>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.border,
+                borderRadius: BorderRadius.circular(100),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              'Foto Kendaraan',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: AppColors.text,
+              ),
+            ),
+            const SizedBox(height: 12),
+            ListTile(
+              leading: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.tintBlueBg,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(Icons.camera_alt_rounded,
+                    color: AppColors.tintBlueFg, size: 20),
+              ),
+              title: Text('Ambil dari Kamera',
+                  style: GoogleFonts.plusJakartaSans(
+                      fontSize: 14, fontWeight: FontWeight.w600)),
+              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+            ),
+            ListTile(
+              leading: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.tintPeachBg,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(Icons.photo_library_rounded,
+                    color: AppColors.tintPeachFg, size: 20),
+              ),
+              title: Text('Pilih dari Galeri',
+                  style: GoogleFonts.plusJakartaSans(
+                      fontSize: 14, fontWeight: FontWeight.w600)),
+              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+            ),
+            if (_imagePath != null)
+              ListTile(
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.tintRoseBg,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(Icons.delete_outline_rounded,
+                      color: AppColors.danger, size: 20),
+                ),
+                title: Text('Hapus Foto',
+                    style: GoogleFonts.plusJakartaSans(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.danger)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  setState(() => _imagePath = null);
+                },
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+
+    if (src == null) return;
+    try {
+      final file = src == ImageSource.camera
+          ? await ImageHelper.pickFromCamera()
+          : await ImageHelper.pickFromGallery();
+      if (file != null && mounted) {
+        setState(() => _imagePath = file.path);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal mengambil foto: $e')),
+        );
+      }
+    }
+  }
+
   Future<void> _onSave() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -88,6 +199,7 @@ class _AddVehiclePageState extends State<AddVehiclePage> {
       year: int.parse(_yearController.text.trim()),
       plateNumber: _plateController.text.trim().toUpperCase(),
       color: _colorController.text.trim(),
+      imagePath: _imagePath,
       initialOdometer: Formatters.parseFormattedNumber(_odometerController.text),
       fuelType: _fuelTypes[_selectedFuel],
       createdAt: now,
@@ -247,12 +359,109 @@ class _AddVehiclePageState extends State<AddVehiclePage> {
     );
   }
 
+  Widget _buildPhotoCard() {
+    final hasPhoto = _imagePath != null && File(_imagePath!).existsSync();
+    return GestureDetector(
+      onTap: _pickPhoto,
+      child: Container(
+        width: double.infinity,
+        height: 150,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: hasPhoto ? AppColors.primary : AppColors.border,
+            width: hasPhoto ? 2 : 1.5,
+          ),
+        ),
+        child: hasPhoto
+            ? Stack(
+                fit: StackFit.expand,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.file(
+                      File(_imagePath!),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  Positioned(
+                    right: 10,
+                    bottom: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.65),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.edit_rounded,
+                              size: 14, color: Colors.white),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Ubah Foto',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: AppColors.primarySofter,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(
+                      Icons.add_a_photo_rounded,
+                      size: 22,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Tambah Foto Kendaraan',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    'Opsional · Kamera atau galeri',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+
   Widget _buildFormFields() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _buildPhotoCard(),
+          const SizedBox(height: 20),
           Text(
             'JENIS KENDARAAN',
             style: GoogleFonts.plusJakartaSans(

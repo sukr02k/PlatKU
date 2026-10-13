@@ -1,10 +1,17 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
+import 'package:flutter_kendaraanku_app/core/utils/image_helper.dart';
 import 'package:flutter_kendaraanku_app/data/local/auth_local_datasource.dart';
 import 'package:flutter_kendaraanku_app/data/local/demo_data_seeder.dart';
+import 'package:flutter_kendaraanku_app/data/repositories/auth_repository.dart';
+import 'package:flutter_kendaraanku_app/data/repositories/fuel_log_repository.dart';
+import 'package:flutter_kendaraanku_app/data/repositories/service_log_repository.dart';
+import 'package:flutter_kendaraanku_app/data/repositories/vehicle_document_repository.dart';
+import 'package:flutter_kendaraanku_app/data/repositories/vehicle_repository.dart';
 import 'package:flutter_kendaraanku_app/presentation/auth/pages/login_page.dart';
 import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_bloc.dart';
 import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_event.dart';
@@ -29,6 +36,10 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   String _userName = '';
   String _userEmail = '';
+  String? _userImagePath;
+  int _memberSinceYear = DateTime.now().year;
+  int _totalTransactions = 0;
+  int _totalDocuments = 0;
   bool _isLoading = true;
 
   @override
@@ -41,10 +52,47 @@ class _ProfilePageState extends State<ProfilePage> {
     final authDatasource = AuthLocalDatasource();
     final name = await authDatasource.getUserName();
     final email = await authDatasource.getUserEmail();
+    final userId = await authDatasource.getUserId();
+    String? imagePath = await authDatasource.getUserImagePath();
+
+    int memberYear = DateTime.now().year;
+    int txCount = 0;
+    int docCount = 0;
+
+    if (userId != null) {
+      final userRes = await AuthRepository().getUserById(userId);
+      userRes.fold((_) {}, (user) {
+        memberYear = user.createdAt.year;
+        if (user.imagePath != null && user.imagePath!.isNotEmpty) {
+          imagePath = user.imagePath;
+        }
+      });
+
+      final vehiclesRes = await VehicleRepository().getByUser(userId);
+      final vehicles = vehiclesRes.getOrElse(() => []);
+      final fuelRepo = FuelLogRepository();
+      final serviceRepo = ServiceLogRepository();
+      for (final v in vehicles) {
+        if (v.id == null) continue;
+        final fuels = (await fuelRepo.getByVehicle(v.id!)).getOrElse(() => []);
+        final services =
+            (await serviceRepo.getByVehicle(v.id!)).getOrElse(() => []);
+        txCount += fuels.length + services.length;
+      }
+
+      final docs = (await VehicleDocumentRepository().getByUser(userId))
+          .getOrElse(() => []);
+      docCount = docs.length;
+    }
+
     if (mounted) {
       setState(() {
         _userName = name ?? 'Pengguna';
         _userEmail = email ?? '-';
+        _userImagePath = imagePath;
+        _memberSinceYear = memberYear;
+        _totalTransactions = txCount;
+        _totalDocuments = docCount;
         _isLoading = false;
       });
     }
@@ -59,22 +107,29 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
-      child: Scaffold(
-        backgroundColor: AppColors.bg,
-        body: SingleChildScrollView(
-          child: Column(
-            children: [
-              _buildHeroHeader(),
-              _buildProfileCard(),
-              const SizedBox(height: 18),
-              _buildSettingsGroup('AKUN', _accountRows()),
-              _buildSettingsGroup('PREFERENSI', _preferenceRows()),
-              _buildSettingsGroup('LAINNYA', _otherRows()),
-              _buildLogoutButton(),
-              _buildVersionText(),
-            ],
+    return BlocListener<VehicleBloc, VehicleState>(
+      listener: (_, state) {
+        if (state is VehicleLoaded) {
+          _loadUserData();
+        }
+      },
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: SystemUiOverlayStyle.light,
+        child: Scaffold(
+          backgroundColor: AppColors.bg,
+          body: SingleChildScrollView(
+            child: Column(
+              children: [
+                _buildHeroHeader(),
+                _buildProfileCard(),
+                const SizedBox(height: 18),
+                _buildSettingsGroup('AKUN', _accountRows()),
+                _buildSettingsGroup('PREFERENSI', _preferenceRows()),
+                _buildSettingsGroup('LAINNYA', _otherRows()),
+                _buildLogoutButton(),
+                _buildVersionText(),
+              ],
+            ),
           ),
         ),
       ),
@@ -130,7 +185,6 @@ class _ProfilePageState extends State<ProfilePage> {
     final vehicleState = context.watch<VehicleBloc>().state;
     final vehicleCount =
         vehicleState is VehicleLoaded ? vehicleState.vehicles.length : 0;
-    final currentYear = DateTime.now().year;
 
     return Transform.translate(
       offset: const Offset(0, -42),
@@ -162,30 +216,51 @@ class _ProfilePageState extends State<ProfilePage> {
                     // Avatar + info
                     Row(
                       children: [
-                        Container(
-                          width: 64,
-                          height: 64,
-                          decoration: BoxDecoration(
-                            color: AppColors.primarySoft,
-                            borderRadius: BorderRadius.circular(20),
-                            border:
-                                Border.all(color: AppColors.surface, width: 3),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.08),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Center(
-                            child: Text(
-                              _getInitials(_userName),
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.primaryStrong,
-                              ),
+                        GestureDetector(
+                          onTap: _userImagePath != null &&
+                                  File(_userImagePath!).existsSync()
+                              ? () => ImageHelper.showFullScreenImage(
+                                    context,
+                                    file: File(_userImagePath!),
+                                    title: 'Foto Profil - $_userName',
+                                  )
+                              : null,
+                          child: Container(
+                            width: 64,
+                            height: 64,
+                            decoration: BoxDecoration(
+                              color: AppColors.primarySoft,
+                              borderRadius: BorderRadius.circular(20),
+                              border:
+                                  Border.all(color: AppColors.surface, width: 3),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.08),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(17),
+                              child: _userImagePath != null &&
+                                      File(_userImagePath!).existsSync()
+                                  ? Image.file(
+                                      File(_userImagePath!),
+                                      fit: BoxFit.cover,
+                                      width: 64,
+                                      height: 64,
+                                    )
+                                  : Center(
+                                      child: Text(
+                                        _getInitials(_userName),
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.w800,
+                                          color: AppColors.primaryStrong,
+                                        ),
+                                      ),
+                                    ),
                             ),
                           ),
                         ),
@@ -226,7 +301,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                         color: AppColors.tintAmberFg),
                                     const SizedBox(width: 4),
                                     Text(
-                                      'Member Sejak $currentYear',
+                                      'Member Sejak $_memberSinceYear',
                                       style: GoogleFonts.plusJakartaSans(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w700,
@@ -253,6 +328,18 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: Row(
                         children: [
                           _buildStat('$vehicleCount', 'Kendaraan'),
+                          Container(
+                            width: 1,
+                            height: 28,
+                            color: AppColors.divider,
+                          ),
+                          _buildStat('$_totalTransactions', 'Transaksi'),
+                          Container(
+                            width: 1,
+                            height: 28,
+                            color: AppColors.divider,
+                          ),
+                          _buildStat('$_totalDocuments', 'Dokumen'),
                         ],
                       ),
                     ),
@@ -405,6 +492,7 @@ class _ProfilePageState extends State<ProfilePage> {
               builder: (_) => EditProfilePage(
                 currentName: _userName,
                 currentEmail: _userEmail,
+                currentImagePath: _userImagePath,
               ),
             ),
           );

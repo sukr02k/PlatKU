@@ -21,7 +21,10 @@ class DatabaseHelper {
     final path = join(await getDatabasesPath(), 'kendaraanku.db');
     return openDatabase(
       path,
-      version: 2,
+      version: 3,
+      onConfigure: (db) async {
+        await db.execute('PRAGMA foreign_keys = ON');
+      },
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -31,6 +34,24 @@ class DatabaseHelper {
     if (oldVersion < 2) {
       await db.execute(_createVehicleDocumentsSql);
     }
+    if (oldVersion < 3) {
+      await _createIndexes(db);
+    }
+  }
+
+  Future<void> _createIndexes(Database db) async {
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_vehicles_user_active ON vehicles(user_id, is_active)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_fuel_logs_vehicle_date ON fuel_logs(vehicle_id, date DESC)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_service_logs_vehicle_date ON service_logs(vehicle_id, date DESC)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_vehicle_documents_vehicle_expiry ON vehicle_documents(vehicle_id, expiry_date)',
+    );
   }
 
   static const String _createVehicleDocumentsSql = '''
@@ -45,7 +66,7 @@ class DatabaseHelper {
       notes TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL,
-      FOREIGN KEY (vehicle_id) REFERENCES vehicles(id)
+      FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
     )
   ''';
 
@@ -83,7 +104,7 @@ class DatabaseHelper {
         notes TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
-        FOREIGN KEY (user_id) REFERENCES users(id)
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       )
     ''');
 
@@ -103,7 +124,7 @@ class DatabaseHelper {
         receipt_image_path TEXT,
         notes TEXT,
         created_at TEXT NOT NULL,
-        FOREIGN KEY (vehicle_id) REFERENCES vehicles(id)
+        FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
       )
     ''');
 
@@ -123,7 +144,7 @@ class DatabaseHelper {
         next_service_date TEXT,
         notes TEXT,
         created_at TEXT NOT NULL,
-        FOREIGN KEY (vehicle_id) REFERENCES vehicles(id)
+        FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
       )
     ''');
 
@@ -139,6 +160,9 @@ class DatabaseHelper {
         is_default INTEGER NOT NULL DEFAULT 1
       )
     ''');
+
+    // B-Tree Indexes
+    await _createIndexes(db);
 
     // Seed default expense categories
     final defaultCategories = [
