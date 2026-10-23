@@ -1,8 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_kendaraanku_app/core/services/notification_service.dart';
-import 'package:flutter_kendaraanku_app/data/models/vehicle_document_model.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/vehicle_document_repository.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/vehicle_repository.dart';
+import 'package:platku/core/services/notification_service.dart';
+import 'package:platku/data/models/vehicle_document_model.dart';
+import 'package:platku/data/repositories/vehicle_document_repository.dart';
+import 'package:platku/data/repositories/vehicle_repository.dart';
 import 'vehicle_document_event.dart';
 import 'vehicle_document_state.dart';
 

@@ -4,14 +4,14 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
-import 'package:flutter_kendaraanku_app/core/components/app_icon_button.dart';
-import 'package:flutter_kendaraanku_app/core/utils/formatters.dart';
-import 'package:flutter_kendaraanku_app/core/utils/image_helper.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_bloc.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_event.dart';
-import 'package:flutter_kendaraanku_app/data/models/vehicle_model.dart';
-import 'package:flutter_kendaraanku_app/data/local/auth_local_datasource.dart';
+import 'package:platku/core/constants/colors.dart';
+import 'package:platku/core/components/app_icon_button.dart';
+import 'package:platku/core/utils/formatters.dart';
+import 'package:platku/core/utils/image_helper.dart';
+import 'package:platku/presentation/blocs/vehicle/vehicle_bloc.dart';
+import 'package:platku/presentation/blocs/vehicle/vehicle_event.dart';
+import 'package:platku/data/models/vehicle_model.dart';
+import 'package:platku/data/local/auth_local_datasource.dart';
 
 class AddVehiclePage extends StatefulWidget {
   const AddVehiclePage({super.key});
@@ -101,11 +101,11 @@ class _AddVehiclePageState extends State<AddVehiclePage> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppColors.tintBlueBg,
+                  color: AppColors.tintGraphiteBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(Icons.camera_alt_rounded,
-                    color: AppColors.tintBlueFg, size: 20),
+                    color: AppColors.tintGraphiteFg, size: 20),
               ),
               title: Text('Ambil dari Kamera',
                   style: GoogleFonts.plusJakartaSans(

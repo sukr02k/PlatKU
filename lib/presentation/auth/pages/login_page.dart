@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_kendaraanku_app/core/components/motovault_logo.dart';
-import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
-import 'package:flutter_kendaraanku_app/data/local/auth_local_datasource.dart';
-import 'package:flutter_kendaraanku_app/data/local/demo_data_seeder.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/auth_repository.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_bloc.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_event.dart';
-import 'package:flutter_kendaraanku_app/presentation/home/pages/main_navigation_page.dart';
+import 'package:platku/core/components/platku_logo.dart';
+import 'package:platku/core/constants/colors.dart';
+import 'package:platku/data/local/auth_local_datasource.dart';
+import 'package:platku/data/repositories/auth_repository.dart';
+import 'package:platku/presentation/blocs/vehicle/vehicle_bloc.dart';
+import 'package:platku/presentation/blocs/vehicle/vehicle_event.dart';
+import 'package:platku/presentation/home/pages/main_navigation_page.dart';
 import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -23,32 +22,12 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _isLoading = false;
-  bool _isDemoLoading = false;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loginDemo() async {
-    if (_isDemoLoading || _isLoading) return;
-    setState(() => _isDemoLoading = true);
-    try {
-      final userId = await DemoDataSeeder.seedAndLogin();
-      if (!mounted) return;
-      context.read<VehicleBloc>().add(LoadVehicles(userId));
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const MainNavigationPage()),
-        (route) => false,
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _isDemoLoading = false);
-      }
-    }
   }
 
   Future<void> _login() async {
@@ -141,8 +120,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 28),
                   _buildLoginButton(),
-                  const SizedBox(height: 14),
-                  _buildDemoModeCard(),
                   const SizedBox(height: 20),
                   _buildRegisterLink(),
                 ],
@@ -150,88 +127,6 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildDemoModeCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.primarySofter,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.primarySoft),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(11),
-            ),
-            child: const Icon(
-              Icons.bolt_rounded,
-              color: AppColors.primary,
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Eksplorasi Cepat (Mode Demo)',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.text,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Muat otomatis 2 kendaraan, riwayat BBM 6 bulan, servis & dokumen.',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11.5,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          ElevatedButton(
-            onPressed: _isDemoLoading ? null : _loginDemo,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: _isDemoLoading
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
-                : Text(
-                    'Demo',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-          ),
-        ],
       ),
     );
   }
@@ -302,7 +197,7 @@ class _LoginPageState extends State<LoginPage> {
                     else
                       const SizedBox(height: 24),
                     const SizedBox(height: 12),
-                    const MotoVaultLogo(size: 72),
+                    const PlatkuLogo(size: 72),
                     const SizedBox(height: 16),
                     Text(
                       'Selamat Datang Kembali',
@@ -316,7 +211,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Masuk untuk melanjutkan mengelola\nkendaraan Anda di MotoVault',
+                      'Masuk untuk melanjutkan mengelola\nkendaraan Anda di PlatKU',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 13,

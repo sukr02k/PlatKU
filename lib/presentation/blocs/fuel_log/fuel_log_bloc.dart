@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/fuel_log_repository.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/vehicle_repository.dart';
-import 'package:flutter_kendaraanku_app/data/models/fuel_log_model.dart';
+import 'package:platku/data/repositories/fuel_log_repository.dart';
+import 'package:platku/data/repositories/vehicle_repository.dart';
+import 'package:platku/data/models/fuel_log_model.dart';
 import 'fuel_log_event.dart';
 import 'fuel_log_state.dart';
 

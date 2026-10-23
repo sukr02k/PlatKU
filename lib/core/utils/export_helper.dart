@@ -5,10 +5,10 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
-import 'package:flutter_kendaraanku_app/core/utils/formatters.dart';
-import 'package:flutter_kendaraanku_app/data/models/fuel_log_model.dart';
-import 'package:flutter_kendaraanku_app/data/models/service_log_model.dart';
-import 'package:flutter_kendaraanku_app/data/models/vehicle_document_model.dart';
+import 'package:platku/core/utils/formatters.dart';
+import 'package:platku/data/models/fuel_log_model.dart';
+import 'package:platku/data/models/service_log_model.dart';
+import 'package:platku/data/models/vehicle_document_model.dart';
 
 class ExportHelper {
   /// Export fuel logs to CSV file, returns the file path
@@ -108,7 +108,7 @@ class ExportHelper {
         build: (context) => [
           pw.Header(
             level: 0,
-            text: 'Laporan Kendaraan MotoVault - $vehicleName',
+            text: 'Laporan Kendaraan PlatKU - $vehicleName',
           ),
           pw.Paragraph(text: 'Plat Nomor: $plateNumber'),
           pw.Paragraph(

@@ -18,7 +18,7 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    final path = join(await getDatabasesPath(), 'kendaraanku.db');
+    final path = join(await getDatabasesPath(), 'platku.db');
     return openDatabase(
       path,
       version: 3,

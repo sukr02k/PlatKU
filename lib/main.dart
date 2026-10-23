@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_kendaraanku_app/core/services/notification_service.dart';
-import 'package:flutter_kendaraanku_app/core/theme.dart';
-import 'package:flutter_kendaraanku_app/core/theme_controller.dart';
-import 'package:flutter_kendaraanku_app/presentation/auth/pages/splash_page.dart';
+import 'package:platku/core/services/notification_service.dart';
+import 'package:platku/core/theme.dart';
+import 'package:platku/core/theme_controller.dart';
+import 'package:platku/presentation/auth/pages/splash_page.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 Future<void> main() async {
@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
       builder: (context, themeMode, _) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          title: 'MotoVault',
+          title: 'PlatKU',
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: themeMode,

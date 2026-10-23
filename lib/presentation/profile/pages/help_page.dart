@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
+import 'package:platku/core/constants/colors.dart';
 
 class HelpPage extends StatelessWidget {
   const HelpPage({super.key});

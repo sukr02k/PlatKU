@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter_kendaraanku_app/core/components/app_icon_button.dart';
-import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
-import 'package:flutter_kendaraanku_app/core/utils/formatters.dart';
-import 'package:flutter_kendaraanku_app/core/utils/image_helper.dart';
-import 'package:flutter_kendaraanku_app/core/utils/receipt_parser.dart';
+import 'package:platku/core/components/app_icon_button.dart';
+import 'package:platku/core/constants/colors.dart';
+import 'package:platku/core/utils/formatters.dart';
+import 'package:platku/core/utils/image_helper.dart';
+import 'package:platku/core/utils/receipt_parser.dart';
 
 class ScanReceiptResult {
   final ParsedReceipt parsed;

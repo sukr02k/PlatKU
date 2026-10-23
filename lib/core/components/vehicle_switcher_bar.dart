@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
-import 'package:flutter_kendaraanku_app/core/utils/formatters.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_bloc.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_event.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_state.dart';
+import 'package:platku/core/constants/colors.dart';
+import 'package:platku/core/utils/formatters.dart';
+import 'package:platku/presentation/blocs/vehicle/vehicle_bloc.dart';
+import 'package:platku/presentation/blocs/vehicle/vehicle_event.dart';
+import 'package:platku/presentation/blocs/vehicle/vehicle_state.dart';
 
 class VehicleSwitcherBar extends StatelessWidget {
   const VehicleSwitcherBar({super.key});

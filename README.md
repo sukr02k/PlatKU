@@ -1,7 +1,7 @@
-# MotoVault — Offline-First Vehicle & Garage Management
+# PlatKU — Offline-First Vehicle & Garage Management
 
 <p align="center">
-  <img src="assets/branding/app_icon.png" alt="MotoVault Logo" width="140"/>
+  <img src="assets/branding/app_icon.png" alt="PlatKU Logo" width="140"/>
 </p>
 
 <p align="center">
@@ -9,16 +9,16 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/sukr02k/motovault/actions/workflows/flutter_ci.yml">
-    <img src="https://github.com/sukr02k/motovault/actions/workflows/flutter_ci.yml/badge.svg" alt="MotoVault Flutter CI & Release APK"/>
+  <a href="https://github.com/sukr02k/platku/actions/workflows/flutter_ci.yml">
+    <img src="https://github.com/sukr02k/platku/actions/workflows/flutter_ci.yml/badge.svg" alt="PlatKU Flutter CI & Release APK"/>
   </a>
-  <a href="https://github.com/sukr02k/motovault/releases/latest">
-    <img src="https://img.shields.io/badge/Release-v1.2.0-2563EB?logo=github&logoColor=white" alt="Latest Release v1.2.0"/>
+  <a href="https://github.com/sukr02k/platku/releases/latest">
+    <img src="https://img.shields.io/badge/Release-v1.2.0-DC2626?logo=github&logoColor=white" alt="Latest Release v1.2.0"/>
   </a>
   <img src="https://img.shields.io/badge/Tests-9%20passed-10B981?logo=checkmarx&logoColor=white" alt="Tests 9 passed"/>
   <img src="https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white" alt="Flutter"/>
-  <img src="https://img.shields.io/badge/SQLite-v3%20Offline-0F172A?logo=sqlite&logoColor=white" alt="SQLite v3"/>
-  <img src="https://img.shields.io/badge/State-BLoC-06B6D4" alt="BLoC"/>
+  <img src="https://img.shields.io/badge/SQLite-v3%20Offline-14171B?logo=sqlite&logoColor=white" alt="SQLite v3"/>
+  <img src="https://img.shields.io/badge/State-BLoC-DC2626" alt="BLoC"/>
   <img src="https://img.shields.io/badge/OCR-Google%20ML%20Kit-10B981" alt="Google ML Kit"/>
 </p>
 
@@ -28,16 +28,16 @@
 
 | Versi | Format | Arsitektur Target | Ukuran File | Tautan Unduh |
 | :--- | :--- | :--- | :--- | :--- |
-| **v1.2.0** | `.apk` (Release) | `arm64-v8a` (Android modern 64-bit) | **33 MB** | [Download MotoVault.v1.2.0.apk](https://github.com/sukr02k/motovault/releases/download/v1.2.0/MotoVault.v1.2.0.apk) |
-| **v1.2.0** | Arsip Asset Lengkap | Semua ABI (`arm64`, `armeabi-v7a`, `x86_64`) | ~27 - 35 MB | [Lihat Semua Asset di GitHub Releases](https://github.com/sukr02k/motovault/releases/tag/v1.2.0) |
+| **v1.2.0** | `.apk` (Release) | `arm64-v8a` (Android modern 64-bit) | **33 MB** | [Download PlatKU.v1.2.0.apk](https://github.com/sukr02k/platku/releases/download/v1.2.0/PlatKU.v1.2.0.apk) |
+| **v1.2.0** | Arsip Asset Lengkap | Semua ABI (`arm64`, `armeabi-v7a`, `x86_64`) | ~27 - 35 MB | [Lihat Semua Asset di GitHub Releases](https://github.com/sukr02k/platku/releases/tag/v1.2.0) |
 
 ---
 
 ## Ringkasan Project (Overview)
 
-**MotoVault** adalah aplikasi pencatatan operasional dan perawatan kendaraan pribadi (sepeda motor maupun mobil) yang dirancang dengan pendekatan **100% Offline-First**. Seluruh pencatatan konsumsi bahan bakar (`km/L`), riwayat servis berkala, pemantauan masa berlaku dokumen kendaraan (STNK, Pajak Tahunan/PKB, BPKB, SIM, Asuransi), hingga pemindaian struk SPBU/bengkel berbasis *on-device OCR* berjalan langsung di perangkat menggunakan **SQLite** tanpa ketergantungan koneksi internet.
+**PlatKU** adalah aplikasi pencatatan operasional dan perawatan kendaraan pribadi (sepeda motor maupun mobil) yang dirancang dengan pendekatan **100% Offline-First**. Seluruh pencatatan konsumsi bahan bakar (`km/L`), riwayat servis berkala, pemantauan masa berlaku dokumen kendaraan (STNK, Pajak Tahunan/PKB, BPKB, SIM, Asuransi), hingga pemindaian struk SPBU/bengkel berbasis *on-device OCR* berjalan langsung di perangkat menggunakan **SQLite** tanpa ketergantungan koneksi internet.
 
-Untuk menjaga keamanan data pada skenario *offline*, aplikasi ini dilengkapi dengan sistem **Backup & Restore Database (`.db`)** bervalidasi header SQLite (termasuk impor langsung dari penyimpanan perangkat via Android Storage Access Framework), ekspor laporan kendaraan ke format **PDF (A4)** dan **CSV**, serta fitur **Demo Data Seeder** untuk memudahkan pengujian fitur secara langsung.
+Untuk menjaga keamanan data pada skenario *offline*, aplikasi ini dilengkapi dengan sistem **Backup & Restore Database (`.db`)** bervalidasi header SQLite (termasuk impor langsung dari penyimpanan perangkat via Android Storage Access Framework) serta ekspor laporan kendaraan ke format **PDF (A4)** dan **CSV**.
 
 ---
 
@@ -66,7 +66,7 @@ Untuk menjaga keamanan data pada skenario *offline*, aplikasi ini dilengkapi den
 ### 4. On-Device OCR, Laporan & Keamanan Data
 - **Scan Nota SPBU & Bengkel (On-Device OCR)**: Ekstraksi otomatis tanggal transaksi, liter BBM, harga per liter, jenis BBM, dan total biaya dari foto struk menggunakan **Google ML Kit Text Recognition**.
 - **Ekspor Laporan PDF (A4) & CSV**: Pembuatan laporan riwayat kendaraan siap cetak (dilengkapi pratinjau cetak via `printing`) serta ekspor spreadsheet `.csv` via `share_plus`.
-- **Backup & Restore Database Lokal (`.db`)**: Pencadangan dan pemulihan database SQLite `kendaraanku.db` dengan validasi *magic bytes* header `SQLite format 3` serta transisi bersih *state re-initialization* ke halaman awal.
+- **Backup & Restore Database Lokal (`.db`)**: Pencadangan dan pemulihan database SQLite `platku.db` dengan validasi *magic bytes* header `SQLite format 3` serta transisi bersih *state re-initialization* ke halaman awal.
 - **Keamanan Akun & Tema Adaptif**: Penyimpanan password akun lokal menggunakan *Salted SHA-256*, validasi unik email akun, serta dukungan tema **Terang**, **Gelap**, dan **Ikuti Sistem** secara *real-time*.
 
 ---
@@ -93,12 +93,11 @@ flowchart TD
         Export["ExportHelper (PDF A4 Generator, Print Preview & CSV Export)"]
         Notif["NotificationService (Scheduled Service & Document Expiry Alerts)"]
         SAF["Backup MethodChannel (Android SAF .db Import & SQLite Header Check)"]
-        Demo["DemoDataSeeder (Sample Garage Seeder & Reset)"]
     end
 
     subgraph Data["Data Layer"]
         Repos["Repositories (Vehicle, FuelLog, ServiceLog, Document, Auth)"]
-        Local["Local Sources (AuthLocalDatasource & DemoDataSeeder)"]
+        Local["Local Sources (AuthLocalDatasource)"]
         DB[("DatabaseHelper (SQLite v3)")]
         Prefs[("SharedPreferences (Session & ThemeMode)")]
     end
@@ -111,7 +110,6 @@ flowchart TD
     Local --> DB
     Local --> Prefs
     SAF --> DB
-    Demo --> DB
 ```
 
 ### Struktur Direktori
@@ -119,14 +117,14 @@ flowchart TD
 ```text
 lib/
 ├── core/
-│   ├── components/       # Komponen UI reusable (BottomNav, Buttons, VehicleSwitcherBar, MotoVaultLogo)
+│   ├── components/       # Komponen UI reusable (BottomNav, Buttons, VehicleSwitcherBar, PlatkuLogo)
 │   ├── constants/        # Sistem warna adaptif Light/Dark (AppColors), tipografi, dan konstanta string
 │   ├── services/         # Penjadwalan notifikasi lokal (NotificationService)
 │   ├── utils/            # Formatters (id_ID), ReceiptParser (OCR), ExportHelper (PDF/CSV), ImageHelper, PasswordHasher
 │   ├── theme.dart        # Konfigurasi ThemeData terang dan gelap
 │   └── theme_controller.dart
 ├── data/
-│   ├── local/            # AuthLocalDatasource & DemoDataSeeder
+│   ├── local/            # AuthLocalDatasource
 │   ├── models/           # Model entitas (User, Vehicle, FuelLog, ServiceLog, VehicleDocument)
 │   ├── repositories/     # Abstraksi query CRUD, filter relasional & rekalkulasi odometer otomatis
 │   └── database_helper.dart # Konfigurasi skema SQLite v3, indexing B-Tree & migrasi tabel
@@ -275,10 +273,8 @@ flutter test
 flutter run
 ```
 
-### 3. Akun Demo & Data Sampel
-Untuk mengisi data sampel secara instan (2 kendaraan, 6 bulan riwayat BBM, catatan servis berkala, serta dokumen STNK/Pajak/SIM):
-- Tekan tombol **Mode Demo** pada layar *Onboarding* atau *Login*, atau melalui menu **Profil → Muat Data Demo**.
-- Seluruh data sampel dapat dibersihkan kapan saja melalui menu **Profil → Kosongkan Garasi**.
+### 3. Mulai Mencatat
+Setelah masuk, tambahkan kendaraan pertama Anda lewat tombol **Tambah Kendaraan** di Beranda, lalu catat BBM, servis, dan dokumen secara offline.
 
 ---
 

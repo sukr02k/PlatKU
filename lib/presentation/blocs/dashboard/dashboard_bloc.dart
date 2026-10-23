@@ -1,11 +1,11 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_kendaraanku_app/data/models/fuel_log_model.dart';
-import 'package:flutter_kendaraanku_app/data/models/service_log_model.dart';
-import 'package:flutter_kendaraanku_app/data/models/vehicle_document_model.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/fuel_log_repository.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/service_log_repository.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/vehicle_document_repository.dart';
-import 'package:flutter_kendaraanku_app/core/utils/formatters.dart';
+import 'package:platku/data/models/fuel_log_model.dart';
+import 'package:platku/data/models/service_log_model.dart';
+import 'package:platku/data/models/vehicle_document_model.dart';
+import 'package:platku/data/repositories/fuel_log_repository.dart';
+import 'package:platku/data/repositories/service_log_repository.dart';
+import 'package:platku/data/repositories/vehicle_document_repository.dart';
+import 'package:platku/core/utils/formatters.dart';
 import 'dashboard_event.dart';
 import 'dashboard_state.dart';
 

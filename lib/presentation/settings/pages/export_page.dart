@@ -6,11 +6,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 
-import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
-import 'package:flutter_kendaraanku_app/core/utils/export_helper.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/fuel_log_repository.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/service_log_repository.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/vehicle_document_repository.dart';
+import 'package:platku/core/constants/colors.dart';
+import 'package:platku/core/utils/export_helper.dart';
+import 'package:platku/data/repositories/fuel_log_repository.dart';
+import 'package:platku/data/repositories/service_log_repository.dart';
+import 'package:platku/data/repositories/vehicle_document_repository.dart';
 
 class ExportPage extends StatefulWidget {
   final int vehicleId;
@@ -56,7 +56,7 @@ class _ExportPageState extends State<ExportPage> {
           if (mounted) setState(() => _lastExportedPath = path);
           await Share.shareXFiles(
             [XFile(path)],
-            text: 'Data BBM ${widget.vehicleName} (${widget.plateNumber}) - MotoVault',
+            text: 'Data BBM ${widget.vehicleName} (${widget.plateNumber}) - PlatKU',
           );
         },
       );
@@ -95,7 +95,7 @@ class _ExportPageState extends State<ExportPage> {
           if (mounted) setState(() => _lastExportedPath = path);
           await Share.shareXFiles(
             [XFile(path)],
-            text: 'Data Servis ${widget.vehicleName} (${widget.plateNumber}) - MotoVault',
+            text: 'Data Servis ${widget.vehicleName} (${widget.plateNumber}) - PlatKU',
           );
         },
       );
@@ -153,7 +153,7 @@ class _ExportPageState extends State<ExportPage> {
       } else {
         await Share.shareXFiles(
           [XFile(path)],
-          text: 'Laporan Kendaraan ${widget.vehicleName} (${widget.plateNumber}) - MotoVault',
+          text: 'Laporan Kendaraan ${widget.vehicleName} (${widget.plateNumber}) - PlatKU',
         );
       }
     } catch (e) {
@@ -207,8 +207,8 @@ class _ExportPageState extends State<ExportPage> {
                       label: 'Preview & Cetak Laporan (PDF)',
                       subtitle:
                           'Tampilkan pratinjau dokumen PDF A4 siap cetak langsung di layar',
-                      tintBg: AppColors.tintBlueBg,
-                      tintFg: AppColors.tintBlueFg,
+                      tintBg: AppColors.tintGraphiteBg,
+                      tintFg: AppColors.tintGraphiteFg,
                       onTap: () => _exportPdfReport(preview: true),
                     ),
                     const SizedBox(height: 12),
@@ -217,8 +217,8 @@ class _ExportPageState extends State<ExportPage> {
                       label: 'Laporan Lengkap (PDF)',
                       subtitle:
                           'Buat & bagikan laporan ringkasan + riwayat BBM & servis (PDF)',
-                      tintBg: AppColors.tintLavenderBg,
-                      tintFg: AppColors.tintLavenderFg,
+                      tintBg: AppColors.tintSlateBg,
+                      tintFg: AppColors.tintSlateFg,
                       onTap: () => _exportPdfReport(preview: false),
                     ),
                     const SizedBox(height: 12),
@@ -367,13 +367,13 @@ class _ExportPageState extends State<ExportPage> {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: AppColors.tintBlueBg,
+              color: AppColors.tintGraphiteBg,
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(
               Icons.directions_car_outlined,
               size: 22,
-              color: AppColors.tintBlueFg,
+              color: AppColors.tintGraphiteFg,
             ),
           ),
           const SizedBox(width: 14),

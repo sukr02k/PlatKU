@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
+import 'package:platku/core/constants/colors.dart';
 
 class PrivacyPage extends StatelessWidget {
   const PrivacyPage({super.key});
@@ -105,7 +105,7 @@ class PrivacyPage extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'MotoVault dirancang sebagai aplikasi 100% offline. '
+            'PlatKU dirancang sebagai aplikasi 100% offline. '
             'Tidak ada data Anda yang dikirim ke server eksternal manapun, '
             'termasuk pengembang aplikasi ini.',
             style: GoogleFonts.plusJakartaSans(
@@ -147,8 +147,8 @@ class PrivacyPage extends StatelessWidget {
           Divider(height: 18, color: AppColors.divider),
           _highlightRow(
             icon: Icons.lock_outline_rounded,
-            tintBg: AppColors.tintBlueBg,
-            tintFg: AppColors.tintBlueFg,
+            tintBg: AppColors.tintGraphiteBg,
+            tintFg: AppColors.tintGraphiteFg,
             title: 'Akun Lokal',
             subtitle: 'Email & password disimpan di SQLite lokal',
           ),
@@ -318,7 +318,7 @@ class PrivacyPage extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Versi 1.0 · Terakhir diperbarui 01 Jan 2026',
+              'Versi 1.2.0 · Terakhir diperbarui 23 Okt 2026',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -367,8 +367,8 @@ class PrivacyPage extends StatelessWidget {
   static List<_Permission> get _permissions => [
     _Permission(
       icon: Icons.camera_alt_outlined,
-      tintBg: AppColors.tintBlueBg,
-      tintFg: AppColors.tintBlueFg,
+      tintBg: AppColors.tintGraphiteBg,
+      tintFg: AppColors.tintGraphiteFg,
       name: 'Kamera',
       purpose: 'Untuk memfoto kendaraan, dokumen, dan nota.',
     ),

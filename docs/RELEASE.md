@@ -1,4 +1,4 @@
-# Kendaraanku — Release Guide (Google Play Store)
+# PlatKU — Release Guide (Google Play Store)
 
 Panduan menuju produksi. Ikuti urutan dari atas ke bawah. Yang sudah dikerjakan di repo ditandai ✅; yang perlu Anda kerjakan sendiri ditandai ▢.
 
@@ -6,14 +6,14 @@ Panduan menuju produksi. Ikuti urutan dari atas ke bawah. Yang sudah dikerjakan 
 
 ## 1. Identitas Aplikasi ✅
 
-- `applicationId` = `id.kendaraanku.app`
-- `namespace` = `id.kendaraanku.app`
-- App label di AndroidManifest = `Kendaraanku`
-- Versi: `1.0.0+1` di `pubspec.yaml`
+- `applicationId` = `id.platku.app`
+- `namespace` = `id.platku.app`
+- App label di AndroidManifest = `PlatKU`
+- Versi: `1.2.0+3` di `pubspec.yaml`
 
 Jika ingin pakai applicationId berbeda, ubah:
 - `android/app/build.gradle.kts` (2 tempat: `namespace` & `applicationId`)
-- `android/app/src/main/kotlin/id/kendaraanku/app/MainActivity.kt` (package + folder)
+- `android/app/src/main/kotlin/id/platku/app/MainActivity.kt` (package + folder)
 - `android/app/src/main/AndroidManifest.xml` (tidak perlu, label saja yang tersurat)
 
 **Tidak bisa diubah setelah upload pertama ke Play Store.**
@@ -23,18 +23,17 @@ Jika ingin pakai applicationId berbeda, ubah:
 ## 2. App Icon & Splash ✅
 
 Source asset di `assets/branding/`:
-- `app_icon.png` (1024×1024) — icon utama, sudah branded gradient biru + huruf "K"
+- `app_icon.png` (2000×2000) — icon utama, branded gradient graphite + plat "KU" (red racing)
 - `app_icon_foreground.png` — adaptive icon foreground (Android 8+)
 - `splash_logo.png` — logo untuk splash screen
 
-> Ini **placeholder**. Untuk produksi, ganti dengan icon final Anda (size sama), lalu regenerasi:
-
+> Regenerasi kapan saja setelah ganti asset:
 ```bash
 dart run flutter_launcher_icons
 dart run flutter_native_splash:create
 ```
 
-Brand color: `#4A7BF7` (sama dengan `AppColors.heroTop`). Adaptive icon background pakai warna ini, splash juga.
+Brand color: `#14171B` (graphite) dengan aksen `#DC2626` (red racing). Adaptive icon background & splash memakai warna graphite.
 
 ---
 
@@ -45,7 +44,7 @@ Play Store **wajib** AAB di-sign dengan release keystore. Saat ini repo masih fa
 ### Generate keystore (sekali saja, simpan baik-baik)
 
 ```bash
-keytool -genkey -v -keystore ~/kendaraanku-upload.jks \
+keytool -genkey -v -keystore ~/platku-upload.jks \
   -keyalg RSA -keysize 2048 -validity 10000 -alias upload
 ```
 
@@ -62,7 +61,7 @@ Edit isinya:
 storePassword=<password keystore>
 keyPassword=<password key>
 keyAlias=upload
-storeFile=/Users/<user>/kendaraanku-upload.jks
+storeFile=/Users/<user>/platku-upload.jks
 ```
 
 File `key.properties` & `*.jks` sudah di-`.gitignore` — jangan commit.
@@ -125,7 +124,7 @@ Atau pakai service gratisan: Notion publish, GitBook, Vercel static page.
 
 Di Play Console → App content → Data safety, jawab:
 
-| Pertanyaan | Jawaban untuk Kendaraanku |
+| Pertanyaan | Jawaban untuk PlatKU |
 |---|---|
 | Does your app collect or share any of the required user data types? | **No** |
 | Is all user data encrypted in transit? | N/A (no network) |
@@ -141,7 +140,7 @@ Yang harus disiapkan untuk listing:
 
 | Item | Spesifikasi |
 |---|---|
-| App name | `Kendaraanku` (≤ 30 char) |
+| App name | `PlatKU` (≤ 30 char) |
 | Short description | 80 char, contoh: "Catat BBM, servis, dan dokumen kendaraan. 100% offline." |
 | Full description | ≤ 4000 char, deskripsi lengkap + bullet fitur |
 | App icon | 512×512 PNG 32-bit (≤ 1 MB) — gunakan `assets/branding/app_icon.png` |
@@ -192,7 +191,7 @@ Upload `.aab` ke Play Console → Internal testing → tester sendiri/tim → ka
 
 ## 11. Pre-launch Checklist ▢
 
-- [ ] applicationId final (`id.kendaraanku.app` atau lainnya) — **tidak bisa diubah lagi**
+- [ ] applicationId final (`id.platku.app` atau lainnya) — **tidak bisa diubah lagi**
 - [ ] Icon final mengganti placeholder di `assets/branding/`
 - [ ] Splash logo final
 - [ ] Keystore release dibuat, password disimpan aman, sudah di-backup

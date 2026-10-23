@@ -1,6 +1,6 @@
 class AppStrings {
-  static const String appName = 'MotoVault';
-  static const String appTagline = 'Smart Vehicle & Garage Ledger';
+  static const String appName = 'PlatKU';
+  static const String appTagline = 'Catatan Kendaraan Pribadi di Genggaman';
   static const String appVersion = 'v1.2.0';
   static const String appBuild = 'Build 3';
 

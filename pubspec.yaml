@@ -1,5 +1,5 @@
-name: flutter_kendaraanku_app
-description: "MotoVault — Smart Vehicle & Garage Ledger. Aplikasi pencatatan kendaraan pribadi 100% offline: BBM, servis, dokumen kendaraan, scan nota OCR, dan laporan ekspor PDF/CSV."
+name: platku
+description: "PlatKU — Catatan Kendaraan Pribadi di Genggaman. Aplikasi pencatatan kendaraan pribadi 100% offline: BBM, servis, dokumen kendaraan, scan nota OCR, dan laporan ekspor PDF/CSV."
 publish_to: 'none'
 
 version: 1.2.0+3
@@ -36,6 +36,7 @@ dependencies:
   flutter_timezone: ^3.0.1
   permission_handler: ^11.3.1
   flutter_native_splash: ^2.4.1
+  url_launcher: ^6.3.1
 
 dev_dependencies:
   flutter_test:
@@ -58,16 +59,16 @@ flutter_launcher_icons:
   ios: true
   image_path: "assets/branding/app_icon.png"
   min_sdk_android: 21
-  adaptive_icon_background: "#0F172A"
+  adaptive_icon_background: "#14171B"
   adaptive_icon_foreground: "assets/branding/app_icon_foreground.png"
   remove_alpha_ios: true
 
 # ─── Native splash — run: dart run flutter_native_splash:create ──────────────
 flutter_native_splash:
-  color: "#0F172A"
+  color: "#14171B"
   image: "assets/branding/splash_logo.png"
   android_12:
-    color: "#0F172A"
+    color: "#14171B"
     image: "assets/branding/splash_logo.png"
   android: true
   ios: true

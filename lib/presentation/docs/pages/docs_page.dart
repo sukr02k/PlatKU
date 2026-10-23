@@ -4,20 +4,20 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
-import 'package:flutter_kendaraanku_app/core/utils/image_helper.dart';
-import 'package:flutter_kendaraanku_app/data/local/auth_local_datasource.dart';
-import 'package:flutter_kendaraanku_app/data/models/vehicle_document_model.dart';
-import 'package:flutter_kendaraanku_app/data/models/vehicle_model.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/vehicle_document_repository.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/vehicle_repository.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_bloc.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_event.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle_document/vehicle_document_bloc.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle_document/vehicle_document_event.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle_document/vehicle_document_state.dart';
-import 'package:flutter_kendaraanku_app/presentation/docs/pages/add_document_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/vehicle/pages/add_vehicle_page.dart';
+import 'package:platku/core/constants/colors.dart';
+import 'package:platku/core/utils/image_helper.dart';
+import 'package:platku/data/local/auth_local_datasource.dart';
+import 'package:platku/data/models/vehicle_document_model.dart';
+import 'package:platku/data/models/vehicle_model.dart';
+import 'package:platku/data/repositories/vehicle_document_repository.dart';
+import 'package:platku/data/repositories/vehicle_repository.dart';
+import 'package:platku/presentation/blocs/vehicle/vehicle_bloc.dart';
+import 'package:platku/presentation/blocs/vehicle/vehicle_event.dart';
+import 'package:platku/presentation/blocs/vehicle_document/vehicle_document_bloc.dart';
+import 'package:platku/presentation/blocs/vehicle_document/vehicle_document_event.dart';
+import 'package:platku/presentation/blocs/vehicle_document/vehicle_document_state.dart';
+import 'package:platku/presentation/docs/pages/add_document_page.dart';
+import 'package:platku/presentation/vehicle/pages/add_vehicle_page.dart';
 
 class DocsPage extends StatefulWidget {
   const DocsPage({super.key});
@@ -644,9 +644,9 @@ class _DocCard extends StatelessWidget {
       case VehicleDocumentTypes.stnk:
         return (AppColors.tintAmberBg, AppColors.tintAmberFg);
       case VehicleDocumentTypes.bpkb:
-        return (AppColors.tintBlueBg, AppColors.tintBlueFg);
+        return (AppColors.tintGraphiteBg, AppColors.tintGraphiteFg);
       case VehicleDocumentTypes.sim:
-        return (AppColors.tintLavenderBg, AppColors.tintLavenderFg);
+        return (AppColors.tintSlateBg, AppColors.tintSlateFg);
       case VehicleDocumentTypes.asuransi:
         return (AppColors.tintMintBg, AppColors.tintMintFg);
       case VehicleDocumentTypes.pajak:
@@ -719,11 +719,11 @@ class _DocCard extends StatelessWidget {
                     width: 28,
                     height: 28,
                     decoration: BoxDecoration(
-                      color: AppColors.tintBlueBg,
+                      color: AppColors.tintGraphiteBg,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(Icons.camera_alt,
-                        size: 14, color: AppColors.tintBlueFg),
+                        size: 14, color: AppColors.tintGraphiteFg),
                   ),
               ],
             ),
@@ -1025,11 +1025,11 @@ class _EmptyState extends StatelessWidget {
             _featureRow(Icons.receipt_long_rounded, AppColors.tintAmberBg,
                 AppColors.tintAmberFg, 'STNK', 'Pengingat sebelum kadaluarsa'),
             const SizedBox(height: 8),
-            _featureRow(Icons.shield_outlined, AppColors.tintBlueBg,
-                AppColors.tintBlueFg, 'BPKB', 'Bukti kepemilikan kendaraan'),
+            _featureRow(Icons.shield_outlined, AppColors.tintGraphiteBg,
+                AppColors.tintGraphiteFg, 'BPKB', 'Bukti kepemilikan kendaraan'),
             const SizedBox(height: 8),
-            _featureRow(Icons.badge_outlined, AppColors.tintLavenderBg,
-                AppColors.tintLavenderFg, 'SIM', 'Lisensi mengemudi'),
+            _featureRow(Icons.badge_outlined, AppColors.tintSlateBg,
+                AppColors.tintSlateFg, 'SIM', 'Lisensi mengemudi'),
             const SizedBox(height: 8),
             _featureRow(
                 Icons.health_and_safety_outlined,

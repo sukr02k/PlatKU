@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_kendaraanku_app/core/components/motovault_logo.dart';
-import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
-import 'package:flutter_kendaraanku_app/presentation/profile/pages/privacy_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/profile/pages/terms_page.dart';
+import 'package:platku/core/components/platku_logo.dart';
+import 'package:platku/core/constants/colors.dart';
+import 'package:platku/presentation/profile/pages/privacy_page.dart';
+import 'package:platku/presentation/profile/pages/terms_page.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
@@ -42,10 +42,6 @@ class AboutPage extends StatelessWidget {
           _sectionHeader('Fitur Utama'),
           const SizedBox(height: 10),
           ..._features.map(_featureRow),
-          const SizedBox(height: 18),
-          _sectionHeader('Teknologi'),
-          const SizedBox(height: 10),
-          _buildTechCard(),
           const SizedBox(height: 18),
           _sectionHeader('Legal'),
           const SizedBox(height: 10),
@@ -86,10 +82,10 @@ class AboutPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const MotoVaultLogo(size: 80),
+          const PlatkuLogo(size: 80),
           const SizedBox(height: 14),
           Text(
-            'MotoVault',
+            'PlatKU',
             textAlign: TextAlign.center,
             style: GoogleFonts.plusJakartaSans(
               fontSize: 20,
@@ -99,7 +95,7 @@ class AboutPage extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            'Versi 1.2.0 · Smart Vehicle & Garage Ledger',
+            'Versi 1.2.0 (Build 3) · Catatan Kendaraan Pribadi di Genggaman',
             textAlign: TextAlign.center,
             style: GoogleFonts.plusJakartaSans(
               fontSize: 12,
@@ -185,30 +181,6 @@ class AboutPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTechCard() {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: const [
-          _TechChip('Flutter 3.x'),
-          _TechChip('BLoC'),
-          _TechChip('SQLite'),
-          _TechChip('Google ML Kit'),
-          _TechChip('fl_chart'),
-          _TechChip('PDF Export'),
-          _TechChip('Plus Jakarta Sans'),
-        ],
-      ),
-    );
-  }
-
   Widget _buildLegalRow(
     BuildContext context, {
     required IconData icon,
@@ -259,7 +231,7 @@ class AboutPage extends StatelessWidget {
     return Column(
       children: [
         Text(
-          '© 2026 MotoVault',
+          '© 2026 PlatKU',
           style: GoogleFonts.plusJakartaSans(
             fontSize: 12,
             fontWeight: FontWeight.w600,
@@ -281,8 +253,8 @@ class AboutPage extends StatelessWidget {
   static List<_Feature> get _features => [
     _Feature(
       icon: Icons.directions_car_rounded,
-      tintBg: AppColors.tintBlueBg,
-      tintFg: AppColors.tintBlueFg,
+      tintBg: AppColors.tintGraphiteBg,
+      tintFg: AppColors.tintGraphiteFg,
       title: 'Multi Kendaraan',
       subtitle: 'Catat berbagai motor & mobil',
     ),
@@ -309,8 +281,8 @@ class AboutPage extends StatelessWidget {
     ),
     _Feature(
       icon: Icons.document_scanner_rounded,
-      tintBg: AppColors.tintLavenderBg,
-      tintFg: AppColors.tintLavenderFg,
+      tintBg: AppColors.tintSlateBg,
+      tintFg: AppColors.tintSlateFg,
       title: 'Scan Nota OCR',
       subtitle: 'Auto-isi form dari foto nota',
     ),
@@ -337,29 +309,4 @@ class _Feature {
     required this.title,
     required this.subtitle,
   });
-}
-
-class _TechChip extends StatelessWidget {
-  final String label;
-  const _TechChip(this.label);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: AppColors.surface2,
-        borderRadius: BorderRadius.circular(100),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Text(
-        label,
-        style: GoogleFonts.plusJakartaSans(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textMuted,
-        ),
-      ),
-    );
-  }
 }

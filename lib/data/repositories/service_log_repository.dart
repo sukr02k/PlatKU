@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
-import 'package:flutter_kendaraanku_app/data/database_helper.dart';
-import 'package:flutter_kendaraanku_app/data/models/service_log_model.dart';
+import 'package:platku/data/database_helper.dart';
+import 'package:platku/data/models/service_log_model.dart';
 
 class ServiceLogRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.getInstance();

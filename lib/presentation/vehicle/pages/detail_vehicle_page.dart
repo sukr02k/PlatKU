@@ -3,24 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
-import 'package:flutter_kendaraanku_app/core/constants/app_styles.dart';
-import 'package:flutter_kendaraanku_app/core/utils/formatters.dart';
-import 'package:flutter_kendaraanku_app/core/utils/image_helper.dart';
-import 'package:flutter_kendaraanku_app/data/models/vehicle_model.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_bloc.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_event.dart';
-import 'package:flutter_kendaraanku_app/presentation/vehicle/pages/edit_vehicle_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/service/pages/service_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/fuel/pages/fuel_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/settings/pages/export_page.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/service_log_repository.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/fuel_log_repository.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/vehicle_document_repository.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/vehicle_repository.dart';
-import 'package:flutter_kendaraanku_app/data/models/service_log_model.dart';
-import 'package:flutter_kendaraanku_app/data/models/fuel_log_model.dart';
-import 'package:flutter_kendaraanku_app/data/models/vehicle_document_model.dart';
+import 'package:platku/core/constants/colors.dart';
+import 'package:platku/core/constants/app_styles.dart';
+import 'package:platku/core/utils/formatters.dart';
+import 'package:platku/core/utils/image_helper.dart';
+import 'package:platku/data/models/vehicle_model.dart';
+import 'package:platku/presentation/blocs/vehicle/vehicle_bloc.dart';
+import 'package:platku/presentation/blocs/vehicle/vehicle_event.dart';
+import 'package:platku/presentation/vehicle/pages/edit_vehicle_page.dart';
+import 'package:platku/presentation/service/pages/service_page.dart';
+import 'package:platku/data/repositories/service_log_repository.dart';
+import 'package:platku/data/repositories/fuel_log_repository.dart';
+import 'package:platku/data/repositories/vehicle_document_repository.dart';
+import 'package:platku/data/repositories/vehicle_repository.dart';
+import 'package:platku/data/models/service_log_model.dart';
+import 'package:platku/data/models/fuel_log_model.dart';
+import 'package:platku/data/models/vehicle_document_model.dart';
 
 
 class DetailVehiclePage extends StatefulWidget {
@@ -82,7 +80,6 @@ class _DetailVehiclePageState extends State<DetailVehiclePage> {
                 else
                   _DokumenTab(vehicle: _vehicle),
                 const SizedBox(height: 16),
-                _ActionButtonsRow(vehicle: _vehicle),
                 const SizedBox(height: 32),
               ],
             ),
@@ -437,9 +434,9 @@ class _StatsGrid extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _MiniStatCard(
-                      iconBg: AppColors.tintBlueBg,
+                      iconBg: AppColors.tintGraphiteBg,
                       icon: Icons.speed_rounded,
-                      iconColor: AppColors.tintBlueFg,
+                      iconColor: AppColors.tintGraphiteFg,
                       label: 'ODOMETER',
                       value: Formatters.odometer(vehicle.initialOdometer),
                     ),
@@ -680,128 +677,6 @@ class _SpesifikasiCard extends StatelessWidget {
           }),
         ),
       ),
-    );
-  }
-}
-
-// ─── Action Buttons Row ────────────────────────────────────────────────────────
-class _ActionButtonsRow extends StatelessWidget {
-  final VehicleModel vehicle;
-
-  const _ActionButtonsRow({required this.vehicle});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: [
-          Expanded(
-            child: _ActionButton(
-              bg: AppColors.tintMintBg,
-              icon: Icons.build_rounded,
-              iconColor: AppColors.tintMintFg,
-              label: 'Servis',
-              onTap: () {
-                final vehicleBloc = context.read<VehicleBloc>();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => BlocProvider.value(
-                      value: vehicleBloc,
-                      child: const ServicePage(),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: _ActionButton(
-              bg: AppColors.tintPeachBg,
-              icon: Icons.local_gas_station_rounded,
-              iconColor: AppColors.tintPeachFg,
-              label: 'BBM',
-              onTap: () {
-                final vehicleBloc = context.read<VehicleBloc>();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => BlocProvider.value(
-                      value: vehicleBloc,
-                      child: const FuelPage(),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: _ActionButton(
-              bg: AppColors.tintAmberBg,
-              icon: Icons.picture_as_pdf_rounded,
-              iconColor: AppColors.tintAmberFg,
-              label: 'Ekspor',
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ExportPage(
-                    vehicleId: vehicle.id!,
-                    vehicleName: '${vehicle.brand} ${vehicle.model}',
-                    plateNumber: vehicle.plateNumber,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ActionButton extends StatelessWidget {
-  final Color bg;
-  final IconData icon;
-  final Color iconColor;
-  final String label;
-  final VoidCallback? onTap;
-
-  const _ActionButton({
-    required this.bg,
-    required this.icon,
-    required this.iconColor,
-    required this.label,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(AppStyles.r),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, size: 24, color: iconColor),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: iconColor,
-            ),
-          ),
-        ],
-      ),
-    ),
     );
   }
 }
@@ -1055,13 +930,13 @@ class _DokumenTab extends StatelessWidget {
                       width: 38,
                       height: 38,
                       decoration: BoxDecoration(
-                        color: AppColors.tintLavenderBg,
+                        color: AppColors.tintSlateBg,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(
                         Icons.folder_rounded,
                         size: 20,
-                        color: AppColors.tintLavenderFg,
+                        color: AppColors.tintSlateFg,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -1128,9 +1003,9 @@ class _DokumenTab extends StatelessWidget {
                 ...vehicleDocs.map((doc) => Padding(
                   padding: const EdgeInsets.only(bottom: 10),
                   child: _DocPhotoCard(
-                    iconBg: AppColors.tintBlueBg,
+                    iconBg: AppColors.tintGraphiteBg,
                     icon: Icons.badge_rounded,
-                    iconColor: AppColors.tintBlueFg,
+                    iconColor: AppColors.tintGraphiteFg,
                     title: doc.documentNumber != null &&
                             doc.documentNumber!.isNotEmpty
                         ? '${doc.documentType} · ${doc.documentNumber}'
@@ -1448,7 +1323,7 @@ class _DocPhotoCard extends StatelessWidget {
                 Icon(
                   hasPhoto ? Icons.camera_alt : Icons.chevron_right_rounded,
                   size: hasPhoto ? 14 : 18,
-                  color: hasPhoto ? AppColors.tintBlueFg : AppColors.textSoft,
+                  color: hasPhoto ? AppColors.tintGraphiteFg : AppColors.textSoft,
                 ),
               ],
             ),

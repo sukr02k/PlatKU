@@ -3,14 +3,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:flutter_kendaraanku_app/core/constants/strings.dart';
-import 'package:flutter_kendaraanku_app/core/theme_controller.dart';
-import 'package:flutter_kendaraanku_app/core/utils/formatters.dart';
-import 'package:flutter_kendaraanku_app/core/utils/password_hasher.dart';
-import 'package:flutter_kendaraanku_app/core/utils/receipt_parser.dart';
-import 'package:flutter_kendaraanku_app/data/models/user_model.dart';
-import 'package:flutter_kendaraanku_app/data/models/vehicle_document_model.dart';
-import 'package:flutter_kendaraanku_app/data/models/vehicle_model.dart';
+import 'package:platku/core/constants/strings.dart';
+import 'package:platku/core/theme_controller.dart';
+import 'package:platku/core/utils/formatters.dart';
+import 'package:platku/core/utils/password_hasher.dart';
+import 'package:platku/core/utils/receipt_parser.dart';
+import 'package:platku/data/models/user_model.dart';
+import 'package:platku/data/models/vehicle_document_model.dart';
+import 'package:platku/data/models/vehicle_model.dart';
 
 void main() {
   setUpAll(() async {
@@ -19,10 +19,10 @@ void main() {
     await initializeDateFormatting('id_ID', null);
   });
 
-  group('MotoVault Brand & ThemeController', () {
-    test('AppStrings exposes MotoVault brand identity and v1.2.0 version', () {
-      expect(AppStrings.appName, 'MotoVault');
-      expect(AppStrings.appTagline, 'Smart Vehicle & Garage Ledger');
+  group('PlatKU Brand & ThemeController', () {
+    test('AppStrings exposes PlatKU brand identity and v1.2.0 version', () {
+      expect(AppStrings.appName, 'PlatKU');
+      expect(AppStrings.appTagline, 'Catatan Kendaraan Pribadi di Genggaman');
       expect(AppStrings.appVersion, 'v1.2.0');
       expect(AppStrings.appBuild, 'Build 3');
     });
@@ -134,7 +134,7 @@ TOTAL BAYAR: Rp 245.000
       final user = UserModel(
         id: 1,
         name: 'Abdan Syakuro',
-        email: 'abdan@motovault.id',
+        email: 'abdan@platku.id',
         password: 'hashedpassword',
         imagePath: '/data/user/avatar.jpg',
         createdAt: now,
@@ -144,7 +144,7 @@ TOTAL BAYAR: Rp 245.000
       final map = user.toMap();
       expect(map['image_path'], '/data/user/avatar.jpg');
       expect(map['name'], 'Abdan Syakuro');
-      expect(map['email'], 'abdan@motovault.id');
+      expect(map['email'], 'abdan@platku.id');
 
       final deserialized = UserModel.fromMap(map);
       expect(deserialized.imagePath, '/data/user/avatar.jpg');

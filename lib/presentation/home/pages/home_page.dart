@@ -2,40 +2,39 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_kendaraanku_app/core/components/motovault_logo.dart';
-import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
-import 'package:flutter_kendaraanku_app/core/constants/app_styles.dart';
-import 'package:flutter_kendaraanku_app/core/components/app_card.dart';
-import 'package:flutter_kendaraanku_app/core/components/app_chip.dart';
-import 'package:flutter_kendaraanku_app/core/components/app_icon_button.dart';
-import 'package:flutter_kendaraanku_app/core/components/section_title.dart';
-import 'package:flutter_kendaraanku_app/core/components/tint_icon_box.dart';
-import 'package:flutter_kendaraanku_app/core/components/status_pill.dart';
-import 'package:flutter_kendaraanku_app/core/extensions/build_context_ext.dart';
-import 'package:flutter_kendaraanku_app/core/extensions/string_ext.dart';
-import 'package:flutter_kendaraanku_app/core/utils/formatters.dart';
-import 'package:flutter_kendaraanku_app/data/local/auth_local_datasource.dart';
-import 'package:flutter_kendaraanku_app/data/local/demo_data_seeder.dart';
-import 'package:flutter_kendaraanku_app/data/models/vehicle_model.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/fuel_log_repository.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/service_log_repository.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/dashboard/dashboard_bloc.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/dashboard/dashboard_event.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/dashboard/dashboard_state.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/fuel_log/fuel_log_bloc.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/service_log/service_log_bloc.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_bloc.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_state.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_event.dart';
-import 'package:flutter_kendaraanku_app/presentation/docs/pages/docs_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/fuel/pages/add_fuel_log_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/fuel/pages/fuel_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/service/pages/add_service_log_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/service/pages/service_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/settings/pages/export_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/vehicle/pages/detail_vehicle_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/notifications/pages/notifications_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/vehicle/pages/add_vehicle_page.dart';
+import 'package:platku/core/components/platku_logo.dart';
+import 'package:platku/core/constants/colors.dart';
+import 'package:platku/core/constants/app_styles.dart';
+import 'package:platku/core/components/app_card.dart';
+import 'package:platku/core/components/app_chip.dart';
+import 'package:platku/core/components/app_icon_button.dart';
+import 'package:platku/core/components/section_title.dart';
+import 'package:platku/core/components/tint_icon_box.dart';
+import 'package:platku/core/components/status_pill.dart';
+import 'package:platku/core/extensions/build_context_ext.dart';
+import 'package:platku/core/extensions/string_ext.dart';
+import 'package:platku/core/utils/formatters.dart';
+import 'package:platku/data/local/auth_local_datasource.dart';
+import 'package:platku/data/models/vehicle_model.dart';
+import 'package:platku/data/repositories/fuel_log_repository.dart';
+import 'package:platku/data/repositories/service_log_repository.dart';
+import 'package:platku/presentation/blocs/dashboard/dashboard_bloc.dart';
+import 'package:platku/presentation/blocs/dashboard/dashboard_event.dart';
+import 'package:platku/presentation/blocs/dashboard/dashboard_state.dart';
+import 'package:platku/presentation/blocs/fuel_log/fuel_log_bloc.dart';
+import 'package:platku/presentation/blocs/service_log/service_log_bloc.dart';
+import 'package:platku/presentation/blocs/vehicle/vehicle_bloc.dart';
+import 'package:platku/presentation/blocs/vehicle/vehicle_state.dart';
+import 'package:platku/presentation/blocs/vehicle/vehicle_event.dart';
+import 'package:platku/presentation/docs/pages/docs_page.dart';
+import 'package:platku/presentation/fuel/pages/add_fuel_log_page.dart';
+import 'package:platku/presentation/fuel/pages/fuel_page.dart';
+import 'package:platku/presentation/service/pages/add_service_log_page.dart';
+import 'package:platku/presentation/service/pages/service_page.dart';
+import 'package:platku/presentation/settings/pages/export_page.dart';
+import 'package:platku/presentation/vehicle/pages/detail_vehicle_page.dart';
+import 'package:platku/presentation/notifications/pages/notifications_page.dart';
+import 'package:platku/presentation/vehicle/pages/add_vehicle_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -241,8 +240,8 @@ class _QuickActionsSection extends StatelessWidget {
             child: _QuickActionChip(
               icon: Icons.badge_rounded,
               label: 'Dokumen',
-              bg: AppColors.tintLavenderBg,
-              fg: AppColors.tintLavenderFg,
+              bg: AppColors.tintSlateBg,
+              fg: AppColors.tintSlateFg,
               onTap: () {
                 final dashBloc = context.read<DashboardBloc?>();
                 final vehicleBloc = context.read<VehicleBloc>();
@@ -262,9 +261,9 @@ class _QuickActionsSection extends StatelessWidget {
           Expanded(
             child: _QuickActionChip(
               icon: Icons.picture_as_pdf_rounded,
-              label: 'Laporan',
-              bg: AppColors.tintBlueBg,
-              fg: AppColors.tintBlueFg,
+              label: 'Ekspor',
+              bg: AppColors.tintGraphiteBg,
+              fg: AppColors.tintGraphiteFg,
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -339,8 +338,35 @@ class _QuickActionChip extends StatelessWidget {
 }
 
 // ─── Home Header ───────────────────────────────────────────────────────────────
-class _HomeHeader extends StatelessWidget {
+class _HomeHeader extends StatefulWidget {
   const _HomeHeader();
+
+  @override
+  State<_HomeHeader> createState() => _HomeHeaderState();
+}
+
+class _HomeHeaderState extends State<_HomeHeader> {
+  bool _hasUnread = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUnreadState();
+  }
+
+  Future<void> _loadUnreadState() async {
+    final seen = await AuthLocalDatasource().getNotificationsLastSeen();
+    if (!mounted) return;
+    setState(() => _hasUnread = seen == null);
+  }
+
+  Future<void> _openNotifications() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const NotificationsPage()),
+    );
+    _loadUnreadState();
+  }
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
@@ -416,20 +442,21 @@ class _HomeHeader extends StatelessWidget {
                     ),
                     size: 40,
                     borderRadius: 12,
-                    onTap: () => context.push(const NotificationsPage()),
+                    onTap: _openNotifications,
                   ),
-                  Positioned(
-                    top: 4,
-                    right: 4,
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: AppColors.danger,
-                        shape: BoxShape.circle,
+                  if (_hasUnread)
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: AppColors.danger,
+                          shape: BoxShape.circle,
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ],
@@ -491,7 +518,7 @@ class _EmptyStateWelcome extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const MotoVaultLogo(size: 76),
+                      const PlatkuLogo(size: 76),
                       const SizedBox(height: 20),
                       Text(
                         'Belum Ada Kendaraan',
@@ -504,7 +531,7 @@ class _EmptyStateWelcome extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Tambahkan kendaraan pertamamu\natau muat data demo untuk eksplorasi instan',
+                        'Tambahkan kendaraan pertamamu untuk mulai mencatat',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 13,
@@ -565,44 +592,6 @@ class _EmptyStateWelcome extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 10),
-                              GestureDetector(
-                                onTap: () async {
-                                  final bloc = ctx.read<VehicleBloc>();
-                                  final userId =
-                                      await DemoDataSeeder.seedAndLogin();
-                                  bloc.add(LoadVehicles(userId));
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 18, vertical: 10),
-                                  decoration: BoxDecoration(
-                                    color:
-                                        Colors.white.withValues(alpha: 0.16),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: Colors.white
-                                          .withValues(alpha: 0.3),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(Icons.bolt_rounded,
-                                          size: 16, color: Colors.white),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        'Muat Garasi Demo (2 Kendaraan)',
-                                        style: GoogleFonts.plusJakartaSans(
-                                          fontSize: 12.5,
-                                          fontWeight: FontWeight.w700,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
                             ],
                           );
                         },
@@ -628,8 +617,8 @@ class _EmptyStateWelcome extends StatelessWidget {
           const SizedBox(height: 14),
           _FeatureRow(
             icon: Icons.local_gas_station_rounded,
-            iconBg: AppColors.tintBlueBg,
-            iconColor: AppColors.tintBlueFg,
+            iconBg: AppColors.tintGraphiteBg,
+            iconColor: AppColors.tintGraphiteFg,
             title: 'Catat Pengisian BBM & Scan Struk',
             subtitle: 'Pantau konsumsi km/L dan otomatis ekstrak nota SPBU',
           ),
@@ -1134,9 +1123,9 @@ class _QuickStatsRow extends StatelessWidget {
               children: [
                 Expanded(
                   child: _QuickStatCard(
-                    iconBg: AppColors.tintBlueBg,
+                    iconBg: AppColors.tintGraphiteBg,
                     icon: Icons.local_gas_station_rounded,
-                    iconColor: AppColors.tintBlueFg,
+                    iconColor: AppColors.tintGraphiteFg,
                     value: '${data.fuelCountThisMonth}x isi',
                     label: 'BBM bulan ini',
                   ),
@@ -1185,9 +1174,9 @@ class _QuickStatsRowPlaceholder extends StatelessWidget {
         children: [
           Expanded(
             child: _QuickStatCard(
-              iconBg: AppColors.tintBlueBg,
+              iconBg: AppColors.tintGraphiteBg,
               icon: Icons.local_gas_station_rounded,
-              iconColor: AppColors.tintBlueFg,
+              iconColor: AppColors.tintGraphiteFg,
               value: '-',
               label: 'BBM bulan ini',
             ),

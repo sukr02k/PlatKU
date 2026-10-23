@@ -16,7 +16,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.abdan.motovault"
+    namespace = "id.platku.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -32,7 +32,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.abdan.motovault"
+        applicationId = "id.platku.app"
         // ML Kit text recognition needs minSdk 21+, Flutter default already meets this.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion

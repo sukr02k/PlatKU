@@ -1,4 +1,4 @@
-import 'package:flutter_kendaraanku_app/data/models/vehicle_model.dart';
+import 'package:platku/data/models/vehicle_model.dart';
 
 abstract class VehicleState {}
 

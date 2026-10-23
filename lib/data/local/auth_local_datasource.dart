@@ -62,4 +62,19 @@ class AuthLocalDatasource {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('is_first_time', false);
   }
+
+  Future<DateTime?> getNotificationsLastSeen() async {
+    final prefs = await SharedPreferences.getInstance();
+    final millis = prefs.getInt('notifications_last_seen');
+    if (millis == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(millis);
+  }
+
+  Future<void> markNotificationsSeen() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(
+      'notifications_last_seen',
+      DateTime.now().millisecondsSinceEpoch,
+    );
+  }
 }

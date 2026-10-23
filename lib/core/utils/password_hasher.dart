@@ -33,7 +33,7 @@ class PasswordHasher {
   }
 
   static String _computeDigest(String salt, String password) {
-    final bytes = utf8.encode('motovault_v1:$salt:$password');
+    final bytes = utf8.encode('platku_v1:$salt:$password');
     return sha256.convert(bytes).toString();
   }
 

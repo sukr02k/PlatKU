@@ -3,20 +3,20 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_kendaraanku_app/core/components/vehicle_switcher_bar.dart';
-import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
-import 'package:flutter_kendaraanku_app/core/utils/formatters.dart';
-import 'package:flutter_kendaraanku_app/core/utils/image_helper.dart';
-import 'package:flutter_kendaraanku_app/data/models/fuel_log_model.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/fuel_log_repository.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/fuel_log/fuel_log_bloc.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/fuel_log/fuel_log_event.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/fuel_log/fuel_log_state.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_bloc.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_event.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_state.dart';
-import 'package:flutter_kendaraanku_app/presentation/fuel/pages/add_fuel_log_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/vehicle/pages/add_vehicle_page.dart';
+import 'package:platku/core/components/vehicle_switcher_bar.dart';
+import 'package:platku/core/constants/colors.dart';
+import 'package:platku/core/utils/formatters.dart';
+import 'package:platku/core/utils/image_helper.dart';
+import 'package:platku/data/models/fuel_log_model.dart';
+import 'package:platku/data/repositories/fuel_log_repository.dart';
+import 'package:platku/presentation/blocs/fuel_log/fuel_log_bloc.dart';
+import 'package:platku/presentation/blocs/fuel_log/fuel_log_event.dart';
+import 'package:platku/presentation/blocs/fuel_log/fuel_log_state.dart';
+import 'package:platku/presentation/blocs/vehicle/vehicle_bloc.dart';
+import 'package:platku/presentation/blocs/vehicle/vehicle_event.dart';
+import 'package:platku/presentation/blocs/vehicle/vehicle_state.dart';
+import 'package:platku/presentation/fuel/pages/add_fuel_log_page.dart';
+import 'package:platku/presentation/vehicle/pages/add_vehicle_page.dart';
 
 class FuelPage extends StatelessWidget {
   const FuelPage({super.key});
@@ -482,7 +482,7 @@ class _FuelPageContentState extends State<_FuelPageContent> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.tintBlueBg,
+                    color: AppColors.tintGraphiteBg,
                     borderRadius: BorderRadius.circular(100),
                   ),
                   child: Text(
@@ -490,7 +490,7 @@ class _FuelPageContentState extends State<_FuelPageContent> {
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.tintBlueFg,
+                      color: AppColors.tintGraphiteFg,
                     ),
                   ),
                 ),
@@ -623,7 +623,7 @@ class _FuelPageContentState extends State<_FuelPageContent> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.tintBlueBg,
+                    color: AppColors.tintGraphiteBg,
                     borderRadius: BorderRadius.circular(100),
                   ),
                   child: Text(
@@ -631,7 +631,7 @@ class _FuelPageContentState extends State<_FuelPageContent> {
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.tintBlueFg,
+                      color: AppColors.tintGraphiteFg,
                     ),
                   ),
                 ),

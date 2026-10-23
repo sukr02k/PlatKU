@@ -4,13 +4,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_kendaraanku_app/core/components/app_icon_button.dart';
-import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
-import 'package:flutter_kendaraanku_app/core/utils/image_helper.dart';
-import 'package:flutter_kendaraanku_app/data/models/vehicle_document_model.dart';
-import 'package:flutter_kendaraanku_app/data/models/vehicle_model.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle_document/vehicle_document_bloc.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle_document/vehicle_document_event.dart';
+import 'package:platku/core/components/app_icon_button.dart';
+import 'package:platku/core/constants/colors.dart';
+import 'package:platku/core/utils/image_helper.dart';
+import 'package:platku/data/models/vehicle_document_model.dart';
+import 'package:platku/data/models/vehicle_model.dart';
+import 'package:platku/presentation/blocs/vehicle_document/vehicle_document_bloc.dart';
+import 'package:platku/presentation/blocs/vehicle_document/vehicle_document_event.dart';
 
 class AddDocumentPage extends StatefulWidget {
   final int userId;

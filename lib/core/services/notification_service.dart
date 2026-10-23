@@ -21,7 +21,7 @@ class NotificationService {
   static const List<int> _dayOffsets = [7, 1, 0];
   static const int _reminderHour = 9; // fire at 09:00 local time
 
-  static const String _channelId = 'kendaraanku_reminders';
+  static const String _channelId = 'platku_reminders';
   static const String _channelName = 'Pengingat Servis & Dokumen';
   static const String _channelDesc =
       'Pengingat servis berikutnya dan masa berlaku dokumen kendaraan.';

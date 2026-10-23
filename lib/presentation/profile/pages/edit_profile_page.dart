@@ -1,11 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
-import 'package:flutter_kendaraanku_app/core/utils/image_helper.dart';
-import 'package:flutter_kendaraanku_app/data/local/auth_local_datasource.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/auth_repository.dart';
-import 'package:flutter_kendaraanku_app/data/models/user_model.dart';
+import 'package:platku/core/constants/colors.dart';
+import 'package:platku/core/utils/image_helper.dart';
+import 'package:platku/data/local/auth_local_datasource.dart';
+import 'package:platku/data/repositories/auth_repository.dart';
+import 'package:platku/data/models/user_model.dart';
 
 class EditProfilePage extends StatefulWidget {
   final String currentName;

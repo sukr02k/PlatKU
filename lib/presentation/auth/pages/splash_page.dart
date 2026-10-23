@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_kendaraanku_app/core/components/motovault_logo.dart';
-import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
-import 'package:flutter_kendaraanku_app/core/constants/strings.dart';
-import 'package:flutter_kendaraanku_app/data/local/auth_local_datasource.dart';
-import 'package:flutter_kendaraanku_app/presentation/auth/pages/onboarding_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/auth/pages/login_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/home/pages/main_navigation_page.dart';
+import 'package:platku/core/components/platku_logo.dart';
+import 'package:platku/core/constants/colors.dart';
+import 'package:platku/core/constants/strings.dart';
+import 'package:platku/data/local/auth_local_datasource.dart';
+import 'package:platku/presentation/auth/pages/onboarding_page.dart';
+import 'package:platku/presentation/auth/pages/login_page.dart';
+import 'package:platku/presentation/home/pages/main_navigation_page.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -104,7 +104,7 @@ class _SplashPageState extends State<SplashPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const MotoVaultLogo(size: 104),
+                    const PlatkuLogo(size: 104),
                     const SizedBox(height: 22),
                     Text(
                       AppStrings.appName,

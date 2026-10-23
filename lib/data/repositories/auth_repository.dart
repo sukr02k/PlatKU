@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
-import 'package:flutter_kendaraanku_app/core/utils/password_hasher.dart';
-import 'package:flutter_kendaraanku_app/data/database_helper.dart';
-import 'package:flutter_kendaraanku_app/data/models/user_model.dart';
+import 'package:platku/core/utils/password_hasher.dart';
+import 'package:platku/data/database_helper.dart';
+import 'package:platku/data/models/user_model.dart';
 
 class AuthRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.getInstance();

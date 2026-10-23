@@ -23,10 +23,10 @@ class AppChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isActive ? AppColors.text : AppColors.surface,
+          color: isActive ? AppColors.chipActive : AppColors.surface,
           borderRadius: BorderRadius.circular(100),
           border: Border.all(
-            color: isActive ? AppColors.text : AppColors.border,
+            color: isActive ? AppColors.chipActive : AppColors.border,
           ),
         ),
         child: Row(

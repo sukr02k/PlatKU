@@ -19,7 +19,7 @@
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
 
     <application
-        android:label="MotoVault"
+        android:label="PlatKU"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="false"
@@ -74,6 +74,11 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- Allow url_launcher to resolve https links (e.g. portfolio). -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
         </intent>
     </queries>
 </manifest>

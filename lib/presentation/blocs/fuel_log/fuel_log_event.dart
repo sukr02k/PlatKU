@@ -1,4 +1,4 @@
-import 'package:flutter_kendaraanku_app/data/models/fuel_log_model.dart';
+import 'package:platku/data/models/fuel_log_model.dart';
 
 abstract class FuelLogEvent {}
 

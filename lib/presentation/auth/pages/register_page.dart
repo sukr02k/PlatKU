@@ -2,13 +2,13 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_kendaraanku_app/core/components/motovault_logo.dart';
-import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
-import 'package:flutter_kendaraanku_app/data/local/auth_local_datasource.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/auth_repository.dart';
-import 'package:flutter_kendaraanku_app/presentation/home/pages/main_navigation_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/profile/pages/privacy_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/profile/pages/terms_page.dart';
+import 'package:platku/core/components/platku_logo.dart';
+import 'package:platku/core/constants/colors.dart';
+import 'package:platku/data/local/auth_local_datasource.dart';
+import 'package:platku/data/repositories/auth_repository.dart';
+import 'package:platku/presentation/home/pages/main_navigation_page.dart';
+import 'package:platku/presentation/profile/pages/privacy_page.dart';
+import 'package:platku/presentation/profile/pages/terms_page.dart';
 import 'login_page.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -329,7 +329,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     else
                       const SizedBox(height: 20),
                     const SizedBox(height: 12),
-                    const MotoVaultLogo(size: 68),
+                    const PlatkuLogo(size: 68),
                     const SizedBox(height: 14),
                     Text(
                       'Buat Akun Baru',
@@ -343,7 +343,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Daftar untuk mulai mengelola\ngarasi digital Anda di MotoVault',
+                      'Daftar untuk mulai mengelola\ngarasi digital Anda di PlatKU',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 13,

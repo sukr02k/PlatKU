@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
-import 'package:flutter_kendaraanku_app/core/utils/password_hasher.dart';
-import 'package:flutter_kendaraanku_app/data/local/auth_local_datasource.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/auth_repository.dart';
+import 'package:platku/core/constants/colors.dart';
+import 'package:platku/core/utils/password_hasher.dart';
+import 'package:platku/data/local/auth_local_datasource.dart';
+import 'package:platku/data/repositories/auth_repository.dart';
 
 class SecurityPage extends StatefulWidget {
   const SecurityPage({super.key});
@@ -200,8 +200,8 @@ class _SecurityPageState extends State<SecurityPage> {
             const SizedBox(height: 10),
             _tipCard(
               icon: Icons.password_rounded,
-              tintBg: AppColors.tintBlueBg,
-              tintFg: AppColors.tintBlueFg,
+              tintBg: AppColors.tintGraphiteBg,
+              tintFg: AppColors.tintGraphiteFg,
               title: 'Gunakan kombinasi karakter',
               subtitle:
                   'Padukan huruf besar, kecil, angka, dan simbol untuk kata sandi yang lebih kuat.',

@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/vehicle_repository.dart';
+import 'package:platku/data/repositories/vehicle_repository.dart';
 import 'vehicle_event.dart';
 import 'vehicle_state.dart';
 

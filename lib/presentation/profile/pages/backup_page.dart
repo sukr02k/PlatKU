@@ -7,9 +7,9 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
-import 'package:flutter_kendaraanku_app/data/database_helper.dart';
-import 'package:flutter_kendaraanku_app/presentation/auth/pages/splash_page.dart';
+import 'package:platku/core/constants/colors.dart';
+import 'package:platku/data/database_helper.dart';
+import 'package:platku/presentation/auth/pages/splash_page.dart';
 
 class BackupPage extends StatefulWidget {
   const BackupPage({super.key});
@@ -20,7 +20,7 @@ class BackupPage extends StatefulWidget {
 
 class _BackupPageState extends State<BackupPage> {
   static const MethodChannel _backupChannel =
-      MethodChannel('com.abdan.motovault/backup');
+      MethodChannel('id.platku.app/backup');
 
   List<_BackupFile> _backups = [];
   bool _loading = true;
@@ -39,7 +39,7 @@ class _BackupPageState extends State<BackupPage> {
       final files = dir
           .listSync()
           .whereType<File>()
-          .where((f) => f.path.contains('kendaraanku_backup_'))
+          .where((f) => f.path.contains('platku_backup_'))
           .toList();
       files.sort((a, b) =>
           b.statSync().modified.compareTo(a.statSync().modified));
@@ -70,14 +70,14 @@ class _BackupPageState extends State<BackupPage> {
     setState(() => _busy = true);
     try {
       final dbPath = await getDatabasesPath();
-      final dbFile = File('$dbPath/kendaraanku.db');
+      final dbFile = File('$dbPath/platku.db');
       if (!await dbFile.exists()) {
         _showSnack('Database tidak ditemukan', danger: true);
         return;
       }
       final dir = await getApplicationDocumentsDirectory();
       final ts = DateTime.now().millisecondsSinceEpoch;
-      await dbFile.copy('${dir.path}/kendaraanku_backup_$ts.db');
+      await dbFile.copy('${dir.path}/platku_backup_$ts.db');
       _showSnack('Backup berhasil dibuat');
       await _loadBackups();
     } catch (e) {
@@ -103,7 +103,7 @@ class _BackupPageState extends State<BackupPage> {
   Future<void> _applyRestoreFromFile(File sourceFile) async {
     await DatabaseHelper.getInstance().close();
     final dbPath = await getDatabasesPath();
-    final targetPath = '$dbPath/kendaraanku.db';
+    final targetPath = '$dbPath/platku.db';
     final walFile = File('$targetPath-wal');
     final shmFile = File('$targetPath-shm');
     if (await walFile.exists()) await walFile.delete();
@@ -121,7 +121,7 @@ class _BackupPageState extends State<BackupPage> {
       final isValid = await _isValidSqliteFile(pickedFile);
       if (!isValid) {
         _showSnack(
-          'File tidak valid. Pilih file backup database (.db) MotoVault.',
+          'File tidak valid. Pilih file backup database (.db) PlatKU.',
           danger: true,
         );
         return;
@@ -140,7 +140,7 @@ class _BackupPageState extends State<BackupPage> {
       final dir = await getApplicationDocumentsDirectory();
       final ts = DateTime.now().millisecondsSinceEpoch;
       final savedCopy =
-          await pickedFile.copy('${dir.path}/kendaraanku_backup_$ts.db');
+          await pickedFile.copy('${dir.path}/platku_backup_$ts.db');
       await _applyRestoreFromFile(savedCopy);
       await _loadBackups();
       if (mounted) {
@@ -261,9 +261,9 @@ class _BackupPageState extends State<BackupPage> {
       final fileName = b.file.uri.pathSegments.last;
       await Share.shareXFiles(
         [XFile(b.file.path, name: fileName, mimeType: 'application/octet-stream')],
-        subject: 'Backup MotoVault · ${_fmtDate(b.modified)}',
+        subject: 'Backup PlatKU · ${_fmtDate(b.modified)}',
         text:
-            'Backup database MotoVault ${_fmtDate(b.modified)} (${_fmtSize(b.sizeBytes)}).',
+            'Backup database PlatKU ${_fmtDate(b.modified)} (${_fmtSize(b.sizeBytes)}).',
       );
     } catch (e) {
       _showSnack('Gagal kirim: $e', danger: true);
@@ -449,7 +449,7 @@ class _BackupPageState extends State<BackupPage> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Impor File Backup dari HP (.db)',
+                            'Impor File Backup',
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 13.5,
                               fontWeight: FontWeight.w700,
@@ -553,11 +553,11 @@ class _BackupPageState extends State<BackupPage> {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: AppColors.tintBlueBg,
+              color: AppColors.tintGraphiteBg,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(Icons.folder_open_rounded,
-                color: AppColors.tintBlueFg, size: 28),
+                color: AppColors.tintGraphiteFg, size: 28),
           ),
           const SizedBox(height: 14),
           Text(

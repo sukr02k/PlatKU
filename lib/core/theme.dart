@@ -8,19 +8,19 @@ class AppTheme {
 
   static ThemeData _buildTheme(Brightness brightness) {
     final isDark = brightness == Brightness.dark;
-    final bgColor = isDark ? const Color(0xFF0B0F19) : const Color(0xFFF4F7FB);
+    final bgColor = isDark ? const Color(0xFF101215) : const Color(0xFFF5F6F7);
     final surfaceColor =
-        isDark ? const Color(0xFF151C2C) : const Color(0xFFFFFFFF);
+        isDark ? const Color(0xFF181B1F) : const Color(0xFFFFFFFF);
     final textColor =
-        isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
+        isDark ? const Color(0xFFF8FAFC) : const Color(0xFF17191D);
     final textMutedColor =
-        isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+        isDark ? const Color(0xFF9AA3AF) : const Color(0xFF5B6472);
     final textSoftColor =
-        isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8);
+        isDark ? const Color(0xFF5B6472) : const Color(0xFF9AA3AF);
     final borderColor =
-        isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1);
+        isDark ? const Color(0xFF333943) : const Color(0xFFD3D6DA);
     final dividerColor =
-        isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0);
+        isDark ? const Color(0xFF24282E) : const Color(0xFFE5E7EB);
 
     return ThemeData(
       brightness: brightness,

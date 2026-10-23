@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
+import 'package:platku/core/constants/colors.dart';
 
 class TermsPage extends StatelessWidget {
   const TermsPage({super.key});
@@ -98,7 +98,7 @@ class TermsPage extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             'Mohon baca syarat & ketentuan berikut dengan saksama. '
-            'Dengan menggunakan aplikasi MotoVault, Anda dianggap setuju '
+            'Dengan menggunakan aplikasi PlatKU, Anda dianggap setuju '
             'dengan seluruh ketentuan yang tercantum.',
             style: GoogleFonts.plusJakartaSans(
               fontSize: 12.5,
@@ -187,7 +187,7 @@ class TermsPage extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Versi 1.0 · Terakhir diperbarui 01 Jan 2026',
+              'Versi 1.2.0 · Terakhir diperbarui 23 Okt 2026',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -205,13 +205,13 @@ class TermsPage extends StatelessWidget {
       number: '1',
       title: 'Penerimaan Ketentuan',
       body:
-          'Dengan mengunduh, memasang, atau menggunakan aplikasi MotoVault, Anda menyatakan telah membaca, memahami, dan menyetujui untuk terikat dengan seluruh syarat & ketentuan ini. Jika tidak setuju, mohon segera berhenti menggunakan aplikasi.',
+          'Dengan mengunduh, memasang, atau menggunakan aplikasi PlatKU, Anda menyatakan telah membaca, memahami, dan menyetujui untuk terikat dengan seluruh syarat & ketentuan ini. Jika tidak setuju, mohon segera berhenti menggunakan aplikasi.',
     ),
     _TermsSection(
       number: '2',
       title: 'Penggunaan Aplikasi',
       body:
-          'MotoVault adalah aplikasi pencatatan kendaraan pribadi untuk kebutuhan dokumentasi personal. Anda hanya boleh menggunakan aplikasi ini untuk tujuan yang sah dan tidak melanggar hukum. Anda bertanggung jawab penuh atas data yang Anda input ke dalam aplikasi.',
+          'PlatKU adalah aplikasi pencatatan kendaraan pribadi untuk kebutuhan dokumentasi personal. Anda hanya boleh menggunakan aplikasi ini untuk tujuan yang sah dan tidak melanggar hukum. Anda bertanggung jawab penuh atas data yang Anda input ke dalam aplikasi.',
     ),
     _TermsSection(
       number: '3',

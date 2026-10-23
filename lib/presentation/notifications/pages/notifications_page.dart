@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
-import 'package:flutter_kendaraanku_app/core/utils/formatters.dart';
-import 'package:flutter_kendaraanku_app/data/local/auth_local_datasource.dart';
-import 'package:flutter_kendaraanku_app/data/models/vehicle_model.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/fuel_log_repository.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/service_log_repository.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/vehicle_document_repository.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/vehicle_repository.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_bloc.dart';
-import 'package:flutter_kendaraanku_app/presentation/vehicle/pages/detail_vehicle_page.dart';
+import 'package:platku/core/constants/colors.dart';
+import 'package:platku/core/utils/formatters.dart';
+import 'package:platku/data/local/auth_local_datasource.dart';
+import 'package:platku/data/models/vehicle_model.dart';
+import 'package:platku/data/repositories/fuel_log_repository.dart';
+import 'package:platku/data/repositories/service_log_repository.dart';
+import 'package:platku/data/repositories/vehicle_document_repository.dart';
+import 'package:platku/data/repositories/vehicle_repository.dart';
+import 'package:platku/presentation/blocs/vehicle/vehicle_bloc.dart';
+import 'package:platku/presentation/vehicle/pages/detail_vehicle_page.dart';
 
 class NotificationsPage extends StatelessWidget {
   const NotificationsPage({super.key});
@@ -19,6 +19,9 @@ class NotificationsPage extends StatelessWidget {
   Future<_NotifData> _loadNotifications() async {
     final userId = await AuthLocalDatasource().getUserId();
     if (userId == null) return _NotifData([], []);
+
+    // Mark notifications as read so the home bell dot dismisses.
+    await AuthLocalDatasource().markNotificationsSeen();
 
     final vehicleRepo = VehicleRepository();
     final fuelRepo = FuelLogRepository();

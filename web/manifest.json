@@ -1,11 +1,11 @@
 {
-    "name": "flutter_kendaraanku_app",
-    "short_name": "flutter_kendaraanku_app",
+    "name": "PlatKU",
+    "short_name": "PlatKU",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#14171B",
+    "theme_color": "#DC2626",
+    "description": "PlatKU — Catatan Kendaraan Pribadi di Genggaman. 100% offline.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

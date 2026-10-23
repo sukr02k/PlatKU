@@ -1,4 +1,4 @@
-package com.abdan.motovault
+package id.platku.app
 
 import android.app.Activity
 import android.content.Intent
@@ -9,7 +9,7 @@ import java.io.File
 import java.io.FileOutputStream
 
 class MainActivity : FlutterActivity() {
-    private val channelName = "com.abdan.motovault/backup"
+    private val channelName = "id.platku.app/backup"
     private val pickDbRequestCode = 9401
     private var pendingResult: MethodChannel.Result? = null
 
@@ -45,7 +45,7 @@ class MainActivity : FlutterActivity() {
             if (resultCode == Activity.RESULT_OK && data?.data != null) {
                 val uri = data.data!!
                 try {
-                    val tempFile = File(cacheDir, "imported_motovault_backup.db")
+                    val tempFile = File(cacheDir, "imported_platku_backup.db")
                     contentResolver.openInputStream(uri)?.use { input ->
                         FileOutputStream(tempFile).use { output ->
                             input.copyTo(output)

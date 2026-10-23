@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
-import 'package:flutter_kendaraanku_app/core/theme_controller.dart';
+import 'package:platku/core/constants/colors.dart';
+import 'package:platku/core/theme_controller.dart';
 
 class ThemePage extends StatefulWidget {
   const ThemePage({super.key});
@@ -28,16 +28,16 @@ class _ThemePageState extends State<ThemePage> {
       label: 'Gelap',
       subtitle: 'Nyaman di mata saat malam',
       icon: Icons.dark_mode_rounded,
-      tintBg: AppColors.tintLavenderBg,
-      tintFg: AppColors.tintLavenderFg,
+      tintBg: AppColors.tintSlateBg,
+      tintFg: AppColors.tintSlateFg,
     ),
     _ThemeOption(
       id: 'system',
       label: 'Ikuti Sistem',
       subtitle: 'Otomatis sesuai pengaturan perangkat',
       icon: Icons.settings_brightness_rounded,
-      tintBg: AppColors.tintBlueBg,
-      tintFg: AppColors.tintBlueFg,
+      tintBg: AppColors.tintGraphiteBg,
+      tintFg: AppColors.tintGraphiteFg,
     ),
   ];
 

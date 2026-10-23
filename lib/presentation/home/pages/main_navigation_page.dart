@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_kendaraanku_app/core/components/bottom_nav.dart';
-import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
-import 'package:flutter_kendaraanku_app/core/services/notification_service.dart';
-import 'package:flutter_kendaraanku_app/data/local/auth_local_datasource.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/vehicle_repository.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_bloc.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_event.dart';
-import 'package:flutter_kendaraanku_app/presentation/home/pages/home_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/fuel/pages/fuel_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/service/pages/service_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/docs/pages/docs_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/profile/pages/profile_page.dart';
+import 'package:platku/core/components/bottom_nav.dart';
+import 'package:platku/core/constants/colors.dart';
+import 'package:platku/core/services/notification_service.dart';
+import 'package:platku/data/local/auth_local_datasource.dart';
+import 'package:platku/data/repositories/vehicle_repository.dart';
+import 'package:platku/presentation/blocs/vehicle/vehicle_bloc.dart';
+import 'package:platku/presentation/blocs/vehicle/vehicle_event.dart';
+import 'package:platku/presentation/home/pages/home_page.dart';
+import 'package:platku/presentation/fuel/pages/fuel_page.dart';
+import 'package:platku/presentation/service/pages/service_page.dart';
+import 'package:platku/presentation/docs/pages/docs_page.dart';
+import 'package:platku/presentation/profile/pages/profile_page.dart';
 
 class MainNavigationPage extends StatefulWidget {
   const MainNavigationPage({super.key});

@@ -3,15 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
-import 'package:flutter_kendaraanku_app/core/components/app_icon_button.dart';
-import 'package:flutter_kendaraanku_app/core/utils/formatters.dart';
-import 'package:flutter_kendaraanku_app/core/utils/receipt_parser.dart';
-import 'package:flutter_kendaraanku_app/data/models/service_log_model.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/vehicle_repository.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/service_log/service_log_bloc.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/service_log/service_log_event.dart';
-import 'package:flutter_kendaraanku_app/presentation/scan/pages/scan_receipt_page.dart';
+import 'package:platku/core/constants/colors.dart';
+import 'package:platku/core/components/app_icon_button.dart';
+import 'package:platku/core/utils/formatters.dart';
+import 'package:platku/core/utils/receipt_parser.dart';
+import 'package:platku/data/models/service_log_model.dart';
+import 'package:platku/data/repositories/vehicle_repository.dart';
+import 'package:platku/presentation/blocs/service_log/service_log_bloc.dart';
+import 'package:platku/presentation/blocs/service_log/service_log_event.dart';
+import 'package:platku/presentation/scan/pages/scan_receipt_page.dart';
 import 'package:intl/intl.dart';
 
 class AddServiceLogPage extends StatefulWidget {

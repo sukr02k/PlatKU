@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_kendaraanku_app/core/components/motovault_logo.dart';
-import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
-import 'package:flutter_kendaraanku_app/data/local/auth_local_datasource.dart';
-import 'package:flutter_kendaraanku_app/data/local/demo_data_seeder.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_bloc.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_event.dart';
-import 'package:flutter_kendaraanku_app/presentation/home/pages/main_navigation_page.dart';
+import 'package:platku/core/components/platku_logo.dart';
+import 'package:platku/core/constants/colors.dart';
+import 'package:platku/data/local/auth_local_datasource.dart';
 import 'register_page.dart';
 
 class OnboardingPage extends StatefulWidget {
@@ -20,7 +15,6 @@ class OnboardingPage extends StatefulWidget {
 class _OnboardingPageState extends State<OnboardingPage> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  bool _seedingDemo = false;
 
   final List<_OnboardingData> _pages = [
     _OnboardingData(
@@ -30,7 +24,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
         AppColors.primary,
         AppColors.accent,
       ],
-      title: 'Garasi Digital MotoVault',
+      title: 'Garasi Digital PlatKU',
       description:
           'Catat servis, konsumsi BBM, dokumen STNK/Pajak, dan semua riwayat kendaraan dalam satu brankas pintar.',
     ),
@@ -49,19 +43,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
           'Visualisasi tren pengeluaran bulanan, OCR scan struk SPBU, dan ekspor laporan siap cetak kapan saja.',
     ),
   ];
-
-  Future<void> _enterDemoMode() async {
-    if (_seedingDemo) return;
-    setState(() => _seedingDemo = true);
-    final userId = await DemoDataSeeder.seedAndLogin();
-    if (!mounted) return;
-    context.read<VehicleBloc>().add(LoadVehicles(userId));
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const MainNavigationPage()),
-      (route) => false,
-    );
-  }
 
   Future<void> _goToNext() async {
     if (_currentPage < _pages.length - 1) {
@@ -169,7 +150,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                           ),
                           child: Center(
                             child: index == 0
-                                ? const MotoVaultLogo(
+                                ? const PlatkuLogo(
                                     size: 112,
                                     showContainer: false,
                                   )
@@ -285,28 +266,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     ),
                   ),
                 ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: TextButton.icon(
-                onPressed: _seedingDemo ? null : _enterDemoMode,
-                icon: const Icon(
-                  Icons.bolt_rounded,
-                  size: 18,
-                  color: AppColors.primary,
-                ),
-                label: Text(
-                  _seedingDemo
-                      ? 'Menyiapkan Garasi Demo...'
-                      : 'Masuk Mode Demo Instan (Data Contoh)',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primary,
-                  ),
-                ),
               ),
             ),
             const SizedBox(height: 16),

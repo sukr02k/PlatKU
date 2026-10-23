@@ -3,28 +3,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_kendaraanku_app/core/constants/colors.dart';
-import 'package:flutter_kendaraanku_app/core/utils/image_helper.dart';
-import 'package:flutter_kendaraanku_app/data/local/auth_local_datasource.dart';
-import 'package:flutter_kendaraanku_app/data/local/demo_data_seeder.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/auth_repository.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/fuel_log_repository.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/service_log_repository.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/vehicle_document_repository.dart';
-import 'package:flutter_kendaraanku_app/data/repositories/vehicle_repository.dart';
-import 'package:flutter_kendaraanku_app/presentation/auth/pages/login_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_bloc.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_event.dart';
-import 'package:flutter_kendaraanku_app/presentation/blocs/vehicle/vehicle_state.dart';
-import 'package:flutter_kendaraanku_app/presentation/profile/pages/about_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/profile/pages/backup_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/profile/pages/edit_profile_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/profile/pages/help_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/profile/pages/language_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/profile/pages/privacy_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/profile/pages/security_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/profile/pages/terms_page.dart';
-import 'package:flutter_kendaraanku_app/presentation/profile/pages/theme_page.dart';
+import 'package:platku/core/constants/colors.dart';
+import 'package:platku/core/utils/image_helper.dart';
+import 'package:platku/data/local/auth_local_datasource.dart';
+import 'package:platku/data/repositories/auth_repository.dart';
+import 'package:platku/data/repositories/fuel_log_repository.dart';
+import 'package:platku/data/repositories/service_log_repository.dart';
+import 'package:platku/data/repositories/vehicle_document_repository.dart';
+import 'package:platku/data/repositories/vehicle_repository.dart';
+import 'package:platku/presentation/auth/pages/login_page.dart';
+import 'package:platku/presentation/blocs/vehicle/vehicle_bloc.dart';
+import 'package:platku/presentation/blocs/vehicle/vehicle_state.dart';
+import 'package:platku/presentation/profile/pages/about_page.dart';
+import 'package:platku/presentation/profile/pages/backup_page.dart';
+import 'package:platku/presentation/profile/pages/edit_profile_page.dart';
+import 'package:platku/presentation/profile/pages/help_page.dart';
+import 'package:platku/presentation/profile/pages/language_page.dart';
+import 'package:platku/presentation/profile/pages/privacy_page.dart';
+import 'package:platku/presentation/profile/pages/security_page.dart';
+import 'package:platku/presentation/profile/pages/terms_page.dart';
+import 'package:platku/presentation/profile/pages/theme_page.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -37,7 +36,6 @@ class _ProfilePageState extends State<ProfilePage> {
   String _userName = '';
   String _userEmail = '';
   String? _userImagePath;
-  int _memberSinceYear = DateTime.now().year;
   int _totalTransactions = 0;
   int _totalDocuments = 0;
   bool _isLoading = true;
@@ -55,14 +53,12 @@ class _ProfilePageState extends State<ProfilePage> {
     final userId = await authDatasource.getUserId();
     String? imagePath = await authDatasource.getUserImagePath();
 
-    int memberYear = DateTime.now().year;
     int txCount = 0;
     int docCount = 0;
 
     if (userId != null) {
       final userRes = await AuthRepository().getUserById(userId);
       userRes.fold((_) {}, (user) {
-        memberYear = user.createdAt.year;
         if (user.imagePath != null && user.imagePath!.isNotEmpty) {
           imagePath = user.imagePath;
         }
@@ -90,7 +86,6 @@ class _ProfilePageState extends State<ProfilePage> {
         _userName = name ?? 'Pengguna';
         _userEmail = email ?? '-';
         _userImagePath = imagePath;
-        _memberSinceYear = memberYear;
         _totalTransactions = txCount;
         _totalDocuments = docCount;
         _isLoading = false;
@@ -285,32 +280,6 @@ class _ProfilePageState extends State<ProfilePage> {
                                   color: AppColors.textMuted,
                                 ),
                               ),
-                              const SizedBox(height: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: AppColors.tintAmberBg,
-                                  borderRadius: BorderRadius.circular(100),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.star,
-                                        size: 12,
-                                        color: AppColors.tintAmberFg),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      'Member Sejak $_memberSinceYear',
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.tintAmberFg,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
                             ],
                           ),
                         ),
@@ -480,8 +449,8 @@ class _ProfilePageState extends State<ProfilePage> {
   List<_SettingsRow> _accountRows() {
     return [
       _SettingsRow(
-        tintBg: AppColors.tintBlueBg,
-        tintFg: AppColors.tintBlueFg,
+        tintBg: AppColors.tintGraphiteBg,
+        tintFg: AppColors.tintGraphiteFg,
         icon: Icons.person_outline,
         title: 'Informasi Pribadi',
         subtitle: 'Nama, email, telepon',
@@ -518,8 +487,8 @@ class _ProfilePageState extends State<ProfilePage> {
   List<_SettingsRow> _preferenceRows() {
     return [
       _SettingsRow(
-        tintBg: AppColors.tintLavenderBg,
-        tintFg: AppColors.tintLavenderFg,
+        tintBg: AppColors.tintSlateBg,
+        tintFg: AppColors.tintSlateFg,
         icon: Icons.palette_outlined,
         title: 'Tema Warna',
         subtitle: 'Terang, Gelap, atau ikuti sistem',
@@ -540,8 +509,8 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
       ),
       _SettingsRow(
-        tintBg: AppColors.tintBlueBg,
-        tintFg: AppColors.tintBlueFg,
+        tintBg: AppColors.tintGraphiteBg,
+        tintFg: AppColors.tintGraphiteFg,
         icon: Icons.cloud_outlined,
         title: 'Backup Database',
         subtitle: 'Kelola backup & restore',
@@ -550,101 +519,7 @@ class _ProfilePageState extends State<ProfilePage> {
           MaterialPageRoute(builder: (_) => const BackupPage()),
         ),
       ),
-      _SettingsRow(
-        tintBg: AppColors.tintPeachBg,
-        tintFg: AppColors.tintPeachFg,
-        icon: Icons.bolt_rounded,
-        title: 'Muat Ulang Data Demo',
-        subtitle: 'Reset & isi garasi contoh (2 kendaraan + riwayat 6 bln)',
-        onTap: () async {
-          final vehicleBloc = context.read<VehicleBloc>();
-          final messenger = ScaffoldMessenger.of(context);
-          final userId = await DemoDataSeeder.seedAndLogin();
-          if (!mounted) return;
-          vehicleBloc.add(LoadVehicles(userId));
-          await _loadUserData();
-          messenger.showSnackBar(
-            SnackBar(
-              content: Text(
-                'Garasi Demo berhasil dimuat ulang!',
-                style: GoogleFonts.plusJakartaSans(color: Colors.white),
-              ),
-              backgroundColor: AppColors.primary,
-            ),
-          );
-        },
-      ),
-      _SettingsRow(
-        tintBg: AppColors.tintRoseBg,
-        tintFg: AppColors.tintRoseFg,
-        icon: Icons.delete_sweep_outlined,
-        title: 'Reset / Kosongkan Garasi',
-        subtitle: 'Hapus seluruh data kendaraan, BBM, servis & dokumen',
-        onTap: _confirmResetGarage,
-      ),
     ];
-  }
-
-  Future<void> _confirmResetGarage() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: Text(
-          'Kosongkan Garasi?',
-          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
-        ),
-        content: Text(
-          'Seluruh data kendaraan, catatan BBM, riwayat servis, dan dokumen pada akun ini akan dihapus permanen agar Anda bisa mulai dari awal.',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 13,
-            color: AppColors.textMuted,
-            height: 1.45,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              'Batal',
-              style: GoogleFonts.plusJakartaSans(
-                color: AppColors.textSoft,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              'Ya, Kosongkan',
-              style: GoogleFonts.plusJakartaSans(
-                color: AppColors.danger,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm != true || !mounted) return;
-    final vehicleBloc = context.read<VehicleBloc>();
-    final messenger = ScaffoldMessenger.of(context);
-    final userId = await AuthLocalDatasource().getUserId();
-    if (userId == null) return;
-
-    await DemoDataSeeder.clearUserGarage(userId);
-    if (!mounted) return;
-    vehicleBloc.add(LoadVehicles(userId));
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          'Garasi berhasil dikosongkan.',
-          style: GoogleFonts.plusJakartaSans(color: Colors.white),
-        ),
-        backgroundColor: AppColors.danger,
-      ),
-    );
   }
 
   List<_SettingsRow> _otherRows() {
@@ -660,8 +535,8 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
       ),
       _SettingsRow(
-        tintBg: AppColors.tintLavenderBg,
-        tintFg: AppColors.tintLavenderFg,
+        tintBg: AppColors.tintSlateBg,
+        tintFg: AppColors.tintSlateFg,
         icon: Icons.gavel_rounded,
         title: 'Syarat & Ketentuan',
         onTap: () => Navigator.push(
@@ -670,8 +545,8 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
       ),
       _SettingsRow(
-        tintBg: AppColors.tintBlueBg,
-        tintFg: AppColors.tintBlueFg,
+        tintBg: AppColors.tintGraphiteBg,
+        tintFg: AppColors.tintGraphiteFg,
         icon: Icons.privacy_tip_outlined,
         title: 'Kebijakan Privasi',
         onTap: () => Navigator.push(
@@ -682,16 +557,17 @@ class _ProfilePageState extends State<ProfilePage> {
       _SettingsRow(
         tintBg: AppColors.tintPeachBg,
         tintFg: AppColors.tintPeachFg,
-        icon: Icons.star_outline,
-        title: 'Beri Rating',
-        onTap: () => _showRatingDialog(),
+        icon: Icons.language_outlined,
+        title: 'Portofolio Developer',
+        subtitle: 'abdnsykro.my.id',
+        onTap: () => _openPortfolio(),
       ),
       _SettingsRow(
         tintBg: AppColors.tintAmberBg,
         tintFg: AppColors.tintAmberFg,
         icon: Icons.info_outline,
         title: 'Tentang Aplikasi',
-        subtitle: 'Versi 1.1.0',
+        subtitle: 'Versi 1.2.0',
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const AboutPage()),
@@ -700,51 +576,23 @@ class _ProfilePageState extends State<ProfilePage> {
     ];
   }
 
-  void _showRatingDialog() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          'Beri Rating',
-          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                5,
-                (i) => Icon(Icons.star,
-                    color: AppColors.tintAmberFg, size: 36),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Terima kasih telah menggunakan MotoVault!',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.plusJakartaSans(
-                color: AppColors.textMuted,
-                fontSize: 13,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'Tutup',
-              style: GoogleFonts.plusJakartaSans(
-                color: AppColors.textSoft,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+  Future<void> _openPortfolio() async {
+    const url = 'https://abdnsykro.my.id';
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Tidak dapat membuka $url',
+            style: GoogleFonts.plusJakartaSans(color: Colors.white),
           ),
-        ],
-      ),
-    );
+          backgroundColor: AppColors.danger,
+        ),
+      );
+    }
   }
 
   Widget _buildLogoutButton() {
@@ -835,7 +683,7 @@ class _ProfilePageState extends State<ProfilePage> {
         padding: const EdgeInsets.only(bottom: 14),
         child: Center(
           child: Text(
-            'MotoVault v1.1.0',
+            'PlatKU v1.2.0',
             style: GoogleFonts.plusJakartaSans(
               fontSize: 11,
               color: AppColors.textSoft,
