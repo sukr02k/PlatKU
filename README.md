@@ -28,8 +28,11 @@
 
 | Versi | Format | Arsitektur Target | Ukuran File | Tautan Unduh |
 | :--- | :--- | :--- | :--- | :--- |
-| **v1.2.0** | `.apk` (Release) | `arm64-v8a` (Android modern 64-bit) | **33 MB** | [Download PlatKU.v1.2.0.apk](https://github.com/sukr02k/platku/releases/download/v1.2.0/PlatKU.v1.2.0.apk) |
-| **v1.2.0** | Arsip Asset Lengkap | Semua ABI (`arm64`, `armeabi-v7a`, `x86_64`) | ~27 - 35 MB | [Lihat Semua Asset di GitHub Releases](https://github.com/sukr02k/platku/releases/tag/v1.2.0) |
+| **v1.2.0** | `.apk` (Release) | `arm64-v8a` (Android modern 64-bit) | **33 MB** | [Download PlatKU.v1.2.0.apk](https://github.com/sukr02k/PlatKU/releases/download/v1.2.0/PlatKU.v1.2.0.apk) |
+| **v1.2.0** | `.apk` (Release) | `armeabi-v7a` (Android 32-bit lama) | **27 MB** | [Download PlatKU.v1.2.0-armeabi-v7a.apk](https://github.com/sukr02k/PlatKU/releases/download/v1.2.0/PlatKU.v1.2.0-armeabi-v7a.apk) |
+| **v1.2.0** | `.apk` (Release) | `x86_64` (Emulator / perangkat x86) | **35 MB** | [Download PlatKU.v1.2.0-x86_64.apk](https://github.com/sukr02k/PlatKU/releases/download/v1.2.0/PlatKU.v1.2.0-x86_64.apk) |
+
+> Halaman rilis lengkap: [github.com/sukr02k/PlatKU/releases/tag/v1.2.0](https://github.com/sukr02k/PlatKU/releases/tag/v1.2.0)
 
 ---
 
