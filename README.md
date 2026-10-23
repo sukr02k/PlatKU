@@ -266,24 +266,3 @@ flutter run
 
 ### 3. Mulai Mencatat
 Setelah masuk, tambahkan kendaraan pertama Anda lewat tombol **Tambah Kendaraan** di Beranda, lalu catat BBM, servis, dan dokumen secara offline.
-
----
-
-## Riwayat Versi (Changelog)
-
-### v1.2.0
-- **Vehicle & Profile Photo Pickers**: Pemilihan foto kendaraan dan avatar profil dari kamera maupun galeri dengan persistensi berkas permanen di direktori dokumen aplikasi (`getApplicationDocumentsDirectory`).
-- **Interactive Image Viewer**: Penampil foto layar penuh dengan pinch-to-zoom (`InteractiveViewer`) pada avatar profil, kendaraan, struk BBM, struk servis, dan dokumen resmi (STNK/SIM/BPKB).
-- **Gestur Pull-to-Refresh**: RefreshIndicator terpasang di seluruh halaman utama (`HomePage`, `FuelPage`, `ServicePage`, `DocsPage`).
-- **Detail Vehicle Edit Flow**: Penyuntingan kendaraan mempertahankan konteks halaman detail dengan sinkronisasi state lokal instan.
-- **Database Restore Sync**: Sinkronisasi state sesi dan navigasi bersih ke SplashPage setelah pemulihan database SQLite.
-- **Validasi Akun**: Penanganan validasi email unik pada SQLite profil lokal.
-- **CI/CD & Testing**: Pembaruan GitHub Actions ke `actions/checkout@v4` dan ekspansi 9/9 unit & widget tests passing.
-
-### v1.1.0
-- **Perpanjangan Dokumen Cepat**: Pintasan perpanjang masa berlaku dokumen (`+1 Tahun` dan `+5 Tahun`).
-- **Kalkulasi Efisiensi BBM**: Perhitungan `km/L` akurat antar pengisian *full tank*.
-- **Pembersihan Logika & UI**: Perbaikan konsistensi warna tema adaptif dan validasi odometer.
-
-### v1.0.0
-- **Rilis Awal**: Garasi multi-kendaraan, CRUD transaksi BBM & servis berkala, brankas dokumen legal, OCR struk nota belanja dengan Google ML Kit, ekspor PDF/CSV, dan cadangan database SQLite lokal.
